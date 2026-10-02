@@ -1,0 +1,154 @@
+/* ═════════════════════════════════════════════════════════════════════════
+   ONER CINEMATIC EXPERIENCE — STYLESHEET
+   Aesthetic: Scientific Environmental Documentary & Industrial Intelligence
+   Palette: Charcoal, deep moss/forest greens, slate, amber, emerald, teal
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* Lenis smooth scrolling integration */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+/* Scrollytelling Typography & Utilities */
+.exp-font-display {
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.exp-font-mono {
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.01em;
+}
+
+/* Glass panel with hairline precision border */
+.exp-glass-panel {
+  background: rgba(11, 15, 13, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.exp-glass-panel-subtle {
+  background: rgba(14, 18, 16, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Vignette & atmospheric grain */
+.exp-vignette {
+  background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(5, 7, 6, 0.85) 100%);
+  pointer-events: none;
+}
+
+/* Subtle scientific crosshairs & grid markers */
+.exp-crosshair {
+  position: relative;
+}
+.exp-crosshair::before,
+.exp-crosshair::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.15);
+}
+.exp-crosshair::before {
+  width: 11px;
+  height: 1px;
+  top: 50%;
+  left: -5px;
+}
+.exp-crosshair::after {
+  width: 1px;
+  height: 11px;
+  left: 50%;
+  top: -5px;
+}
+
+/* Telemetry pill tag */
+.exp-telemetry-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #a1a1aa;
+}
+
+/* Button with subtle energetic border */
+.exp-button-primary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 2.25rem;
+  border-radius: 9999px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #060908;
+  background: #4ade80;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 25px rgba(74, 222, 128, 0.28), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.exp-button-primary:hover {
+  background: #6fe38b;
+  transform: translateY(-2px);
+  box-shadow: 0 0 35px rgba(74, 222, 128, 0.45), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.exp-button-secondary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 9999px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  color: #e4e4e7;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.exp-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: #ffffff;
+}
+
+/* Clean text selection inside experience */
+.experience-root ::selection {
+  background: rgba(74, 222, 128, 0.35);
+  color: #ffffff;
+}
