@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
 
 export interface ExperienceState {
   scrollProgress: number;     // 0 to 1 overall progress
@@ -10,104 +11,878 @@ export interface ExperienceState {
   reducedMotion: boolean;
 }
 
-interface Particle {
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  size: number;
-  alpha: number;
-  baseAlpha: number;
-  life: number;
-  type: 'air' | 'thermal' | 'stream' | 'water';
-}
-
 interface Props {
   stateRef: React.RefObject<ExperienceState>;
 }
 
+// ── CAMERA KEYFRAMES (10 Chapters in ONE Continuous World) ───────────
+// Carefully tuned cinematography: foreground framing, dramatic parallax, multi-scale reveal
+const CAMERA_KEYFRAMES = [
+  // 01: Hero — High atmospheric establishing shot overlooking river, valley, industrial complex & distant mountains
+  { pos: new THREE.Vector3(180, 115, 230), target: new THREE.Vector3(0, 14, 0) },
+  // 02: Environment — Camera descends smoothly toward the facility, framing foreground pines & river canal
+  { pos: new THREE.Vector3(95, 48, 135), target: new THREE.Vector3(10, 18, 15) },
+  // 03: Problem — Camera glides past pipe racks and distillation columns deep into the process area
+  { pos: new THREE.Vector3(38, 22, 78), target: new THREE.Vector3(-12, 14, 0) },
+  // 04: Detection — Cinematic close approach to Furnace F-101, framing burners, gas lines & thermal housing
+  { pos: new THREE.Vector3(-14, 15, 28), target: new THREE.Vector3(-25, 13, 0) },
+  // 05: Explanation — Pivoting around Furnace F-101 revealing causal manifold pipes leading to stacks
+  { pos: new THREE.Vector3(-38, 20, 20), target: new THREE.Vector3(-22, 16, -6) },
+  // 06: Prediction — Tilts upward along the towering Stack 01 toward the horizon & emission envelope
+  { pos: new THREE.Vector3(22, 48, 82), target: new THREE.Vector3(15, 50, -10) },
+  // 07: Simulation — Mid-level perspective across the plant focusing on damper actuation & emission trajectory
+  { pos: new THREE.Vector3(45, 36, 62), target: new THREE.Vector3(-8, 20, 0) },
+  // 08: Action — Focused close-up on physical damper trim actuator and OPC-UA junction
+  { pos: new THREE.Vector3(-24, 11, 16), target: new THREE.Vector3(-25, 9.5, 2.5) },
+  // 09: Autopilot — Dramatic pull-back ascent revealing the entire site operating in unified automated balance
+  { pos: new THREE.Vector3(135, 88, 185), target: new THREE.Vector3(0, 16, 0) },
+  // 10: Control Plane — Final high cinematic panoramic overview of the living digital twin
+  { pos: new THREE.Vector3(165, 105, 215), target: new THREE.Vector3(0, 18, 0) },
+];
+
 export default function ExperienceCanvas({ stateRef }: Props) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Screen-projected 3D telemetry pin positions for DOM overlay
+  const [telemetryPositions, setTelemetryPositions] = useState<{ [key: string]: { x: number; y: number; visible: boolean } }>({});
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d', { alpha: false });
-    if (!ctx) return;
-    const c = ctx;
-    const cv = canvas;
-
-    let animId: number = 0;
-    let width = 0;
-    let height = 0;
-    let dpr = 1;
+    let animId = 0;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
     let isTabVisible = true;
-    let lastTime = performance.now();
     let ambientTime = 0;
+    let lastTime = performance.now();
 
-    // Check reduced motion
-    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    if (stateRef.current) {
-      stateRef.current.reducedMotion = reducedMotionQuery.matches;
+    // ── 1. PROCEDURAL TEXTURE GENERATORS (Zero external network lag) ──
+    // 1A. Soft Gaussian Smoke Sprite
+    const createSmokeTexture = (): THREE.Texture => {
+      const c = document.createElement('canvas');
+      c.width = 128;
+      c.height = 128;
+      const ctx = c.getContext('2d')!;
+      const grad = ctx.createRadialGradient(64, 64, 4, 64, 64, 60);
+      grad.addColorStop(0, 'rgba(210, 220, 215, 0.95)');
+      grad.addColorStop(0.35, 'rgba(150, 165, 160, 0.6)');
+      grad.addColorStop(0.7, 'rgba(95, 110, 105, 0.25)');
+      grad.addColorStop(1, 'rgba(40, 50, 48, 0.0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(64, 64, 64, 0, Math.PI * 2);
+      ctx.fill();
+      const tex = new THREE.CanvasTexture(c);
+      tex.needsUpdate = true;
+      return tex;
+    };
+
+    // 1B. Brushed Industrial Steel Texture
+    const createSteelTexture = (): THREE.Texture => {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d')!;
+      ctx.fillStyle = '#424c48';
+      ctx.fillRect(0, 0, 256, 256);
+      // Fine brushed streaks
+      for (let i = 0; i < 400; i++) {
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.12)';
+        ctx.fillRect(0, Math.random() * 256, 256, 1 + Math.random() * 2);
+      }
+      // Structural panel seam lines and rivet marks
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(4, 4, 248, 248);
+      ctx.fillStyle = 'rgba(20,25,22,0.6)';
+      for (let x = 16; x < 256; x += 32) {
+        ctx.beginPath(); ctx.arc(x, 8, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, 248, 2, 0, Math.PI * 2); ctx.fill();
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(2, 2);
+      return tex;
+    };
+
+    // 1C. Weathered Concrete Texture
+    const createConcreteTexture = (): THREE.Texture => {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d')!;
+      ctx.fillStyle = '#484f4b';
+      ctx.fillRect(0, 0, 256, 256);
+      // Micro-aggregate noise
+      for (let i = 0; i < 2500; i++) {
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.08)';
+        ctx.fillRect(Math.random() * 256, Math.random() * 256, 2, 2);
+      }
+      // Expansion joints
+      ctx.strokeStyle = 'rgba(25,30,28,0.35)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(128, 0); ctx.lineTo(128, 256);
+      ctx.moveTo(0, 128); ctx.lineTo(256, 128);
+      ctx.stroke();
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(4, 4);
+      return tex;
+    };
+
+    // 1D. Water Normal / Perturbation Texture
+    const createWaterNormal = (): THREE.Texture => {
+      const c = document.createElement('canvas');
+      c.width = 128;
+      c.height = 128;
+      const ctx = c.getContext('2d')!;
+      ctx.fillStyle = '#8080ff'; // Flat normal
+      ctx.fillRect(0, 0, 128, 128);
+      for (let y = 0; y < 128; y++) {
+        for (let x = 0; x < 128; x++) {
+          const nx = Math.sin(x * 0.25) * 20 + Math.cos(y * 0.2) * 15;
+          const ny = Math.cos(x * 0.18) * 18 + Math.sin(y * 0.28) * 20;
+          ctx.fillStyle = `rgb(${Math.floor(128 + nx)}, ${Math.floor(128 + ny)}, 240)`;
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(8, 8);
+      return tex;
+    };
+
+    // 1E. Cinematic Sky Gradient
+    const createSkyTexture = (): THREE.Texture => {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 512;
+      const ctx = c.getContext('2d')!;
+      const grad = ctx.createLinearGradient(0, 0, 0, 512);
+      // Realistic atmospheric gradient: Slate-navy zenith -> Cool teal haze -> Warm golden horizon
+      grad.addColorStop(0.0, '#0c1514');
+      grad.addColorStop(0.35, '#162824');
+      grad.addColorStop(0.65, '#283e37');
+      grad.addColorStop(0.85, '#4a5b51');
+      grad.addColorStop(0.96, '#a89472'); // Warm low-angle sun haze
+      grad.addColorStop(1.0, '#695f4c');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 512, 512);
+      // Subtle sun disk glow
+      const sunGrad = ctx.createRadialGradient(380, 440, 10, 380, 440, 160);
+      sunGrad.addColorStop(0, 'rgba(255, 245, 215, 0.85)');
+      sunGrad.addColorStop(0.3, 'rgba(240, 200, 140, 0.35)');
+      sunGrad.addColorStop(1, 'rgba(120, 100, 70, 0)');
+      ctx.fillStyle = sunGrad;
+      ctx.beginPath();
+      ctx.arc(380, 440, 160, 0, Math.PI * 2);
+      ctx.fill();
+      const tex = new THREE.CanvasTexture(c);
+      return tex;
+    };
+
+    const smokeTex = createSmokeTexture();
+    const steelTex = createSteelTexture();
+    const concreteTex = createConcreteTexture();
+    const waterNormalTex = createWaterNormal();
+    const skyTex = createSkyTexture();
+
+    // ── 2. THREE.JS RENDERER & SCENE SETUP ───────────────────────────
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: false,
+        powerPreference: 'high-performance',
+      });
+    } catch (e) {
+      console.error('WebGL initialization error:', e);
+      return;
     }
 
-    const onMotionChange = (e: MediaQueryListEvent) => {
-      if (stateRef.current) stateRef.current.reducedMotion = e.matches;
-    };
-    reducedMotionQuery.addEventListener('change', onMotionChange);
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.18;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
 
-    // Particles pool (pre-allocated)
-    const PARTICLE_COUNT = 90;
-    const particles: Particle[] = [];
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0e1714);
+    // Exponential atmospheric perspective fog
+    scene.fog = new THREE.FogExp2(0x1a2622, 0.0026);
 
-    function initParticles() {
-      particles.length = 0;
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const typeChoice = Math.random();
-        particles.push({
-          x: Math.random() * (width || 1200),
-          y: Math.random() * (height || 800),
-          vx: (Math.random() - 0.3) * 0.4,
-          vy: -0.2 - Math.random() * 0.4,
-          size: 1 + Math.random() * 2,
-          alpha: 0.1 + Math.random() * 0.35,
-          baseAlpha: 0.1 + Math.random() * 0.35,
-          life: Math.random(),
-          type: typeChoice < 0.6 ? 'air' : typeChoice < 0.85 ? 'water' : 'thermal',
-        });
+    const camera = new THREE.PerspectiveCamera(44, width / height, 0.6, 1600);
+    camera.position.copy(CAMERA_KEYFRAMES[0].pos);
+    camera.lookAt(CAMERA_KEYFRAMES[0].target);
+
+    const curPos = new THREE.Vector3().copy(CAMERA_KEYFRAMES[0].pos);
+    const curTarget = new THREE.Vector3().copy(CAMERA_KEYFRAMES[0].target);
+
+    // ── 3. CINEMATIC SKY DOME ─────────────────────────────────────────
+    const skyGeo = new THREE.SphereGeometry(750, 32, 24);
+    const skyMat = new THREE.MeshBasicMaterial({
+      map: skyTex,
+      side: THREE.BackSide,
+      fog: false,
+    });
+    const skyDome = new THREE.Mesh(skyGeo, skyMat);
+    scene.add(skyDome);
+
+    // ── 4. LIGHTING ENVIRONMENT ──────────────────────────────────────
+    // 4A. Golden directional sunlight with crisp industrial cast shadows
+    const sunLight = new THREE.DirectionalLight(0xfff0dc, 2.7);
+    sunLight.position.set(190, 200, 110);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 15;
+    sunLight.shadow.camera.far = 700;
+    const sDim = 190;
+    sunLight.shadow.camera.left = -sDim;
+    sunLight.shadow.camera.right = sDim;
+    sunLight.shadow.camera.top = sDim;
+    sunLight.shadow.camera.bottom = -sDim;
+    sunLight.shadow.bias = -0.0004;
+    scene.add(sunLight);
+
+    // 4B. Soft atmospheric sky fill
+    const hemiLight = new THREE.HemisphereLight(0x7da498, 0x1b2822, 0.95);
+    scene.add(hemiLight);
+
+    // 4C. Ambient fill
+    const ambLight = new THREE.AmbientLight(0x283830, 0.6);
+    scene.add(ambLight);
+
+    // 4D. Localized Furnace Burner & Anomaly Point Light
+    const furnaceGlow = new THREE.PointLight(0xf59e0b, 0, 55);
+    furnaceGlow.position.set(-25, 14, 0);
+    scene.add(furnaceGlow);
+
+    // ── 5. NATURAL LAYERED TERRAIN & SURROUNDING RIDGES ───────────────
+    // Primary Topography Mesh: 800x800 with river basin and surrounding mountains
+    const terrainGeo = new THREE.PlaneGeometry(800, 800, 128, 128);
+    terrainGeo.rotateX(-Math.PI / 2);
+
+    const posAttr = terrainGeo.attributes.position;
+    const vertexColors: number[] = [];
+
+    for (let i = 0; i < posAttr.count; i++) {
+      const x = posAttr.getX(i);
+      const z = posAttr.getZ(i);
+
+      const distFromCenter = Math.sqrt(x * x + z * z);
+      // River channel curve
+      const riverCenter = Math.sin(z * 0.012) * 60 + 55;
+      const distToRiver = Math.abs(x - riverCenter);
+
+      let y = 0;
+
+      if (distToRiver < 42) {
+        // Sculpted riverbed gorge
+        const rNorm = distToRiver / 42;
+        y = -5.5 * Math.cos(rNorm * Math.PI * 0.5);
+      } else if (distFromCenter > 85) {
+        // Natural rolling ridges & distant mountain foothills
+        const oct1 = Math.sin(x * 0.015) * Math.cos(z * 0.015) * 32;
+        const oct2 = Math.sin(x * 0.035 + 1.2) * Math.cos(z * 0.032) * 12;
+        const outerFactor = Math.min((distFromCenter - 85) / 140, 1);
+        y = (oct1 + oct2 + (distFromCenter - 85) * 0.28) * outerFactor;
+      } else {
+        // Graded industrial pad with subtle 0.2m grading tilt for drainage
+        y = (x * 0.005) + 0.2;
+      }
+
+      posAttr.setY(i, y);
+
+      // Vertex color blending: silt/wet mud -> gravel pad -> moss/alpine forest
+      if (y < -1.5) {
+        // Deep moist river silt
+        vertexColors.push(0.07, 0.11, 0.09);
+      } else if (y < 0.8 && distFromCenter < 90) {
+        // Industrial gravel / asphalt pad
+        const cG = 0.14 + (Math.random() - 0.5) * 0.02;
+        vertexColors.push(0.12, cG, 0.12);
+      } else {
+        // Natural landscape: deep conifer greens and earthy terrain
+        const gVar = 0.17 + Math.sin(x * 0.04 + z * 0.04) * 0.05;
+        const rVar = 0.08 + Math.cos(x * 0.03) * 0.02;
+        vertexColors.push(rVar, gVar, 0.11);
       }
     }
 
-    function resize() {
-      if (!cv) return;
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
+    terrainGeo.setAttribute('color', new THREE.Float32BufferAttribute(vertexColors, 3));
+    terrainGeo.computeVertexNormals();
+
+    const terrainMat = new THREE.MeshStandardMaterial({
+      vertexColors: true,
+      roughness: 0.92,
+      metalness: 0.06,
+      flatShading: true,
+    });
+    const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+    terrainMesh.receiveShadow = true;
+    scene.add(terrainMesh);
+
+    // ── 6. DYNAMIC CINEMATIC RIVER & COOLING WATER CANAL ──────────────
+    // 6A. Main River Water Plane
+    const waterGeo = new THREE.PlaneGeometry(420, 420, 64, 64);
+    waterGeo.rotateX(-Math.PI / 2);
+    waterGeo.translate(55, -1.3, 0);
+
+    const waterMat = new THREE.MeshStandardMaterial({
+      color: 0x14352e,
+      roughness: 0.12,
+      metalness: 0.35,
+      normalMap: waterNormalTex,
+      transparent: true,
+      opacity: 0.92,
+    });
+    const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+    waterMesh.receiveShadow = true;
+    scene.add(waterMesh);
+
+    // 6B. Concrete Cooling Outflow Embankment & Discharge Flume
+    const flumeGroup = new THREE.Group();
+    flumeGroup.position.set(48, 0, 36);
+    scene.add(flumeGroup);
+
+    const flumeWallMat = new THREE.MeshStandardMaterial({
+      map: concreteTex,
+      color: 0x5a635f,
+      roughness: 0.88,
+      metalness: 0.12,
+    });
+    const flumeWall = new THREE.Mesh(new THREE.BoxGeometry(8, 6.5, 32), flumeWallMat);
+    flumeWall.position.set(0, 1.8, 0);
+    flumeWall.castShadow = true;
+    flumeWall.receiveShadow = true;
+    flumeGroup.add(flumeWall);
+
+    // Heavy Industrial Outflow Pipe Nozzles (Twin 3m conduits)
+    const outPipeMat = new THREE.MeshStandardMaterial({
+      map: steelTex,
+      color: 0x2e3532,
+      roughness: 0.45,
+      metalness: 0.7,
+    });
+    for (let p = -1; p <= 1; p += 2) {
+      const outPipe = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, 9, 20), outPipeMat);
+      outPipe.rotateZ(Math.PI / 2);
+      outPipe.position.set(3.2, 1.2, p * 7.5);
+      outPipe.castShadow = true;
+      flumeGroup.add(outPipe);
+    }
+
+    // ── 7. INDUSTRIAL COMPLEX (HIGH-FIDELITY ARCHITECTURE) ─────────────
+    const facilityGroup = new THREE.Group();
+    scene.add(facilityGroup);
+
+    // Shared high-detail PBR materials
+    const concretePadMat = new THREE.MeshStandardMaterial({
+      map: concreteTex,
+      color: 0x444d48,
+      roughness: 0.88,
+      metalness: 0.1,
+    });
+    const darkSteelMat = new THREE.MeshStandardMaterial({
+      map: steelTex,
+      color: 0x242d2a,
+      roughness: 0.45,
+      metalness: 0.72,
+    });
+    const lightSteelMat = new THREE.MeshStandardMaterial({
+      map: steelTex,
+      color: 0x6e7d77,
+      roughness: 0.38,
+      metalness: 0.78,
+    });
+    const stackSteelMat = new THREE.MeshStandardMaterial({
+      map: steelTex,
+      color: 0x4f5a55,
+      roughness: 0.52,
+      metalness: 0.65,
+    });
+    const pipeSteelMat = new THREE.MeshStandardMaterial({
+      color: 0x36423d,
+      roughness: 0.4,
+      metalness: 0.75,
+    });
+    const yellowGasMat = new THREE.MeshStandardMaterial({
+      color: 0xd4a528,
+      roughness: 0.45,
+      metalness: 0.4,
+    });
+    const redThermalMat = new THREE.MeshStandardMaterial({
+      color: 0xb53c30,
+      roughness: 0.48,
+      metalness: 0.38,
+    });
+    const structuralTrussMat = new THREE.MeshStandardMaterial({
+      color: 0x2a3330,
+      roughness: 0.6,
+      metalness: 0.7,
+      wireframe: false,
+    });
+
+    // 7A. Multi-Tier Reinforced Concrete Foundation Pads
+    const basePad = new THREE.Mesh(new THREE.BoxGeometry(135, 1.4, 105), concretePadMat);
+    basePad.position.set(-6, 0.7, 0);
+    basePad.receiveShadow = true;
+    facilityGroup.add(basePad);
+
+    const upperProcessPad = new THREE.Mesh(new THREE.BoxGeometry(45, 1.8, 55), concretePadMat);
+    upperProcessPad.position.set(12, 1.2, -5);
+    upperProcessPad.receiveShadow = true;
+    facilityGroup.add(upperProcessPad);
+
+    // 7B. Flue Gas Emission Stacks with Vortex Shedding Strakes & Ring Platforms
+    // Stack 01 (Primary Emission Stack): Height 68m, conical taper, 2 maintenance platforms
+    const stack1Group = new THREE.Group();
+    stack1Group.position.set(15, 0, -10);
+    facilityGroup.add(stack1Group);
+
+    const s1Column = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 3.6, 68, 28), stackSteelMat);
+    s1Column.position.set(0, 34, 0);
+    s1Column.castShadow = true;
+    stack1Group.add(s1Column);
+
+    // Helical vortex strakes along the upper 25m of Stack 01
+    const strakeGeo = new THREE.TorusGeometry(2.35, 0.16, 8, 24);
+    strakeGeo.rotateX(Math.PI / 2);
+    for (let st = 0; st < 6; st++) {
+      const strake = new THREE.Mesh(strakeGeo, darkSteelMat);
+      strake.position.set(0, 48 + st * 3.2, 0);
+      stack1Group.add(strake);
+    }
+
+    // Stack 01 Maintenance Catwalk Platforms (Elevations 35m & 56m)
+    for (const platY of [36, 58]) {
+      const platFloor = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, 0.4, 24), darkSteelMat);
+      platFloor.position.set(0, platY, 0);
+      stack1Group.add(platFloor);
+      // Railing ring
+      const rail = new THREE.Mesh(new THREE.TorusGeometry(4.1, 0.08, 6, 24), lightSteelMat);
+      rail.rotateX(Math.PI / 2);
+      rail.position.set(0, platY + 1.2, 0);
+      stack1Group.add(rail);
+    }
+
+    // Stack 01 Top Crown Rim
+    const s1Crown = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.45, 12, 28), darkSteelMat);
+    s1Crown.rotateX(Math.PI / 2);
+    s1Crown.position.set(0, 68, 0);
+    stack1Group.add(s1Crown);
+
+    // Secondary Auxiliary Stacks (Stack 02 & Stack 03)
+    const stack2Group = new THREE.Group();
+    stack2Group.position.set(26, 0, -18);
+    facilityGroup.add(stack2Group);
+    const s2Column = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 2.9, 54, 20), stackSteelMat);
+    s2Column.position.set(0, 27, 0);
+    s2Column.castShadow = true;
+    stack2Group.add(s2Column);
+
+    const stack3Group = new THREE.Group();
+    stack3Group.position.set(6, 0, -24);
+    facilityGroup.add(stack3Group);
+    const s3Column = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 2.5, 48, 20), stackSteelMat);
+    s3Column.position.set(0, 24, 0);
+    s3Column.castShadow = true;
+    stack3Group.add(s3Column);
+
+    // 7C. HERO OBJECT: FURNACE F-101 (COMBUSTION PROCESS UNIT)
+    const furnaceGroup = new THREE.Group();
+    furnaceGroup.position.set(-25, 0, 0);
+    facilityGroup.add(furnaceGroup);
+
+    // Heavy Concrete Piers Foundation
+    for (let fx = -6; fx <= 6; fx += 12) {
+      for (let fz = -4; fz <= 4; fz += 8) {
+        const pier = new THREE.Mesh(new THREE.BoxGeometry(3.5, 3.2, 3.5), concretePadMat);
+        pier.position.set(fx, 1.6, fz);
+        pier.castShadow = true;
+        furnaceGroup.add(pier);
+      }
+    }
+
+    // Furnace Main Refractory Steel Casing (Elevated 3.2m above ground)
+    const fCasing = new THREE.Mesh(new THREE.BoxGeometry(19, 21, 15), darkSteelMat);
+    fCasing.position.set(0, 13.5, 0);
+    fCasing.castShadow = true;
+    fCasing.receiveShadow = true;
+    furnaceGroup.add(fCasing);
+
+    // External Vertical Structural I-Beam Stiffeners
+    for (let bx = -9.2; bx <= 9.2; bx += 3.06) {
+      const beam = new THREE.Mesh(new THREE.BoxGeometry(0.35, 21.4, 0.4), structuralTrussMat);
+      beam.position.set(bx, 13.5, 7.6);
+      furnaceGroup.add(beam);
+      const beamBack = beam.clone();
+      beamBack.position.set(bx, 13.5, -7.6);
+      furnaceGroup.add(beamBack);
+    }
+
+    // Furnace Exterior Inspection Platform & Railing at Elevation 14m
+    const fCatwalk = new THREE.Mesh(new THREE.BoxGeometry(22, 0.4, 18), darkSteelMat);
+    fCatwalk.position.set(0, 14, 0);
+    furnaceGroup.add(fCatwalk);
+    const fRail = new THREE.Mesh(new THREE.BoxGeometry(22.2, 1.3, 18.2), new THREE.MeshBasicMaterial({ color: 0x5a6862, wireframe: true }));
+    fRail.position.set(0, 14.8, 0);
+    furnaceGroup.add(fRail);
+
+    // Lower Burner Plenum with 4 Fuel-Air Injection Nozzles
+    const plenum = new THREE.Mesh(new THREE.BoxGeometry(14, 2.8, 10), darkSteelMat);
+    plenum.position.set(0, 4.2, 0);
+    furnaceGroup.add(plenum);
+
+    for (let bz = -3; bz <= 3; bz += 2) {
+      const burner = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.9, 2.5, 12), lightSteelMat);
+      burner.rotateX(Math.PI / 2);
+      burner.position.set(0, 4.2, 5.8 + bz * 0.1);
+      furnaceGroup.add(burner);
+    }
+
+    // Natural Gas Header Manifold (Yellow Pipe System)
+    const gasCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-14, 1.2, 9),
+      new THREE.Vector3(-8, 3.8, 9),
+      new THREE.Vector3(-2, 4.2, 8.6),
+      new THREE.Vector3(4, 4.2, 8.6),
+      new THREE.Vector3(10, 2.0, 9),
+    ]);
+    const gasPipe = new THREE.Mesh(new THREE.TubeGeometry(gasCurve, 24, 0.45, 14, false), yellowGasMat);
+    gasPipe.castShadow = true;
+    furnaceGroup.add(gasPipe);
+
+    // Actuator & Motorized Damper Unit (Physical control intervention point)
+    const damperUnit = new THREE.Group();
+    damperUnit.position.set(0, 7.8, 7.8);
+    furnaceGroup.add(damperUnit);
+
+    const damperHousing = new THREE.Mesh(new THREE.BoxGeometry(4.2, 4.8, 2.4), darkSteelMat);
+    damperHousing.castShadow = true;
+    damperUnit.add(damperHousing);
+
+    // Damper Actuator Position Wheel / Servo Drive (Green Accent)
+    const servoMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(1.1, 1.1, 1.6, 16),
+      new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.35, metalness: 0.85 })
+    );
+    servoMesh.rotateZ(Math.PI / 2);
+    servoMesh.position.set(2.4, 0, 0);
+    damperUnit.add(servoMesh);
+
+    // High-Temperature Flue Gas Takeoff Ducting (Red Line to Stack 01)
+    const flueDuctCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, 24, 0),
+      new THREE.Vector3(12, 30, -4),
+      new THREE.Vector3(26, 36, -8),
+      new THREE.Vector3(40, 34, -10),
+    ]);
+    const flueDuct = new THREE.Mesh(new THREE.TubeGeometry(flueDuctCurve, 32, 0.75, 16, false), redThermalMat);
+    flueDuct.castShadow = true;
+    furnaceGroup.add(flueDuct);
+
+    // Subtle thermal anomaly wireframe bounding box on Furnace F-101
+    const thermalBoxGeo = new THREE.BoxGeometry(20.5, 22.5, 16.5);
+    const thermalBoxMat = new THREE.MeshBasicMaterial({
+      color: 0xf59e0b,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.0,
+    });
+    const thermalBoundingBox = new THREE.Mesh(thermalBoxGeo, thermalBoxMat);
+    thermalBoundingBox.position.set(0, 13.5, 0);
+    furnaceGroup.add(thermalBoundingBox);
+
+    // 7D. Distillation Columns & Catalytic Cracker Towers
+    const towerGroup = new THREE.Group();
+    towerGroup.position.set(2, 0, 16);
+    facilityGroup.add(towerGroup);
+
+    // Tower 01: Height 42m with intermediate service rings
+    const t1Geo = new THREE.CylinderGeometry(3.6, 3.6, 42, 24);
+    const t1Mesh = new THREE.Mesh(t1Geo, lightSteelMat);
+    t1Mesh.position.set(0, 21, 0);
+    t1Mesh.castShadow = true;
+    towerGroup.add(t1Mesh);
+
+    for (let ty = 10; ty < 40; ty += 9) {
+      const ringPlat = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.6, 0.35, 20), darkSteelMat);
+      ringPlat.position.set(0, ty, 0);
+      towerGroup.add(ringPlat);
+    }
+
+    // Tower 02: Height 32m
+    const t2Geo = new THREE.CylinderGeometry(2.8, 2.8, 32, 20);
+    const t2Mesh = new THREE.Mesh(t2Geo, lightSteelMat);
+    t2Mesh.position.set(11, 16, 4);
+    t2Mesh.castShadow = true;
+    towerGroup.add(t2Mesh);
+
+    // 7E. Storage Tank Farm with Perimeter Containment Bund
+    const tankFarmGroup = new THREE.Group();
+    tankFarmGroup.position.set(-52, 0, -20);
+    facilityGroup.add(tankFarmGroup);
+
+    // Concrete retention wall (Bund dike)
+    const bundDike = new THREE.Mesh(new THREE.BoxGeometry(60, 2.2, 45), concretePadMat);
+    bundDike.position.set(15, 1.1, 8);
+    bundDike.receiveShadow = true;
+    tankFarmGroup.add(bundDike);
+
+    // 6 Large Crude & Refined Chemical Storage Tanks
+    const tankCylinderGeo = new THREE.CylinderGeometry(7.2, 7.2, 14, 24);
+    const tankDomeGeo = new THREE.SphereGeometry(7.22, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.35);
+
+    for (let r = 0; r < 2; r++) {
+      for (let c = 0; c < 3; c++) {
+        const singleTank = new THREE.Group();
+        singleTank.position.set(c * 17.5, 0, r * 17.5);
+
+        const tBody = new THREE.Mesh(tankCylinderGeo, lightSteelMat);
+        tBody.position.set(0, 7.5, 0);
+        tBody.castShadow = true;
+        singleTank.add(tBody);
+
+        const tDome = new THREE.Mesh(tankDomeGeo, darkSteelMat);
+        tDome.position.set(0, 14.5, 0);
+        singleTank.add(tDome);
+
+        tankFarmGroup.add(singleTank);
+      }
+    }
+
+    // 7F. Multi-Tier Structural Overhead Pipe Bridges (Trusses)
+    const pipeRackGroup = new THREE.Group();
+    facilityGroup.add(pipeRackGroup);
+
+    // Structural H-frame support uprights
+    const uprightGeo = new THREE.BoxGeometry(0.6, 16, 0.6);
+    for (let rx = -35; rx <= 25; rx += 15) {
+      const upright1 = new THREE.Mesh(uprightGeo, structuralTrussMat);
+      upright1.position.set(rx, 8, 4);
+      upright1.castShadow = true;
+      pipeRackGroup.add(upright1);
+
+      const upright2 = new THREE.Mesh(uprightGeo, structuralTrussMat);
+      upright2.position.set(rx, 8, 10);
+      upright2.castShadow = true;
+      pipeRackGroup.add(upright2);
+
+      // Horizontal crossbeam
+      const crossbeam = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, 6.8), structuralTrussMat);
+      crossbeam.position.set(rx, 14, 7);
+      pipeRackGroup.add(crossbeam);
+    }
+
+    // Longitudinal Process Piping Runs (5 Parallel Lines)
+    for (let p = 0; p < 5; p++) {
+      const pLen = 78;
+      const pMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, pLen, 12), pipeSteelMat);
+      pMesh.rotateZ(Math.PI / 2);
+      pMesh.position.set(-5, 10 + (p % 3) * 1.8, 5 + Math.floor(p / 3) * 2.5);
+      pMesh.castShadow = true;
+      pipeRackGroup.add(pMesh);
+    }
+
+    // 7G. Electrical Substation & High-Voltage Transformers (Energy Anchor)
+    const substationGroup = new THREE.Group();
+    substationGroup.position.set(-45, 0, 25);
+    facilityGroup.add(substationGroup);
+
+    const transHousing = new THREE.Mesh(new THREE.BoxGeometry(9, 6.5, 7), darkSteelMat);
+    transHousing.position.set(0, 3.25, 0);
+    transHousing.castShadow = true;
+    substationGroup.add(transHousing);
+
+    // Insulator Bushings
+    for (let b = -2.5; b <= 2.5; b += 2.5) {
+      const bushing = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 3.2, 10), lightSteelMat);
+      bushing.position.set(b, 8, 0);
+      substationGroup.add(bushing);
+    }
+
+    // ── 8. REALISTIC INSTANCED NATURAL VEGETATION & FORESTRY ──────────
+    // Multi-tier organic forest framing the industrial plant
+    const treeTrunkGeo = new THREE.CylinderGeometry(0.3, 0.6, 4, 6);
+    const treeFoliageGeo = new THREE.ConeGeometry(3.2, 8.5, 7);
+    treeFoliageGeo.translate(0, 5, 0);
+
+    const coniferMat = new THREE.MeshStandardMaterial({
+      color: 0x1b3826,
+      roughness: 0.92,
+      metalness: 0.04,
+      flatShading: true,
+    });
+    const deciduousMat = new THREE.MeshStandardMaterial({
+      color: 0x274a2e,
+      roughness: 0.88,
+      metalness: 0.05,
+      flatShading: true,
+    });
+
+    const TREE_COUNT = 320;
+    const coniferMesh = new THREE.InstancedMesh(treeFoliageGeo, coniferMat, TREE_COUNT);
+    const dummyObj = new THREE.Object3D();
+
+    let placedTrees = 0;
+    for (let i = 0; i < 700 && placedTrees < TREE_COUNT; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      // Clusters along valley perimeter and hills (radius 80 to 260)
+      const rad = 82 + Math.pow(Math.random(), 1.4) * 180;
+      const tx = Math.cos(ang) * rad;
+      const tz = Math.sin(ang) * rad;
+
+      // Keep clearance around river canal and central pad
+      const riverCenter = Math.sin(tz * 0.012) * 60 + 55;
+      const distToRiver = Math.abs(tx - riverCenter);
+
+      if (distToRiver > 45 && !(Math.abs(tx) < 70 && Math.abs(tz) < 55)) {
+        dummyObj.position.set(tx, 0.5, tz);
+        const s = 0.65 + Math.random() * 0.85;
+        dummyObj.scale.set(s, s * (0.85 + Math.random() * 0.4), s);
+        dummyObj.rotation.y = Math.random() * Math.PI * 2;
+        dummyObj.updateMatrix();
+        coniferMesh.setMatrixAt(placedTrees++, dummyObj.matrix);
+      }
+    }
+    coniferMesh.castShadow = true;
+    scene.add(coniferMesh);
+
+    // ── 9. ADVANCED AMBIENT PHENOMENA (CONTINUOUS LIVE WORLD) ───────────
+    // 9A. Volumetric Atmospheric Industrial Smoke Plumes (Stack 01 & Stack 02)
+    const SMOKE_COUNT = 110;
+    const smokeMat = new THREE.SpriteMaterial({
+      map: smokeTex,
+      color: 0x5a6660,
+      transparent: true,
+      opacity: 0.38,
+      depthWrite: false,
+      blending: THREE.NormalBlending,
+    });
+
+    interface SmokeParticle {
+      sprite: THREE.Sprite;
+      x: number;
+      y: number;
+      z: number;
+      vx: number;
+      vy: number;
+      vz: number;
+      scale: number;
+      maxScale: number;
+      life: number;
+      maxLife: number;
+      baseOpacity: number;
+    }
+
+    const smokeParticles: SmokeParticle[] = [];
+    const smokeGroup = new THREE.Group();
+    scene.add(smokeGroup);
+
+    for (let i = 0; i < SMOKE_COUNT; i++) {
+      const sp = new THREE.Sprite(smokeMat.clone());
+      sp.position.set(15, 68, -10);
+      smokeGroup.add(sp);
+
+      smokeParticles.push({
+        sprite: sp,
+        x: 15,
+        y: 68,
+        z: -10,
+        vx: 0.22 + (Math.random() - 0.5) * 0.12,
+        vy: 0.45 + Math.random() * 0.35,
+        vz: 0.14 + (Math.random() - 0.5) * 0.12,
+        scale: 3.5,
+        maxScale: 28 + Math.random() * 14,
+        life: Math.random() * 90,
+        maxLife: 85 + Math.random() * 35,
+        baseOpacity: 0.35 + Math.random() * 0.15,
+      });
+    }
+
+    // 9B. Thermal Water Discharge Ripples (Cooling Canal Outflow)
+    const RIPPLE_COUNT = 5;
+    const rippleGeo = new THREE.RingGeometry(1.2, 2.2, 32);
+    rippleGeo.rotateX(-Math.PI / 2);
+    const rippleMat = new THREE.MeshBasicMaterial({
+      color: 0x76b8a8,
+      transparent: true,
+      opacity: 0.65,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const ripples: THREE.Mesh[] = [];
+    for (let r = 0; r < RIPPLE_COUNT; r++) {
+      const rip = new THREE.Mesh(rippleGeo, rippleMat.clone());
+      rip.position.set(54, -1.05, 36);
+      scene.add(rip);
+      ripples.push(rip);
+    }
+
+    // 9C. Sunlit Atmospheric Environmental Dust & Moisture Motes
+    const DUST_COUNT = 240;
+    const dustGeo = new THREE.BufferGeometry();
+    const dustPositions = new Float32Array(DUST_COUNT * 3);
+    for (let d = 0; d < DUST_COUNT * 3; d += 3) {
+      dustPositions[d] = (Math.random() - 0.5) * 260;
+      dustPositions[d + 1] = 2 + Math.random() * 90;
+      dustPositions[d + 2] = (Math.random() - 0.5) * 260;
+    }
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3));
+    const dustPoints = new THREE.Points(
+      dustGeo,
+      new THREE.PointsMaterial({
+        color: 0xffeed2,
+        size: 1.6,
+        transparent: true,
+        opacity: 0.65,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    scene.add(dustPoints);
+
+    // ── 10. 3D SPATIAL TELEMETRY ANCHOR TARGETS ───────────────────────
+    const telemetryWorldAnchors = {
+      co2: new THREE.Vector3(15, 68, -10),         // Stack 01 Rim
+      energy: new THREE.Vector3(-45, 12, 25),       // Substation Grid Bus
+      water: new THREE.Vector3(54, 2, 36),          // Cooling Canal Flume
+      air: new THREE.Vector3(-85, 10, -50),         // Forest Perimeter
+      waste: new THREE.Vector3(-10, 10, -32),       // Process Area
+      furnace: new THREE.Vector3(-25, 17, 0),       // Furnace F-101
+      damper: new THREE.Vector3(-25, 7.8, 7.8),     // Damper Actuator Point
+    };
+
+    const projVec = new THREE.Vector3();
+    function getScreenCoords(vec: THREE.Vector3) {
+      projVec.copy(vec).project(camera);
+      const x = (projVec.x * 0.5 + 0.5) * width;
+      const y = (-(projVec.y * 0.5) + 0.5) * height;
+      const visible = projVec.z < 1.0;
+      return { x, y, visible };
+    }
+
+    // ── 11. EVENT LISTENERS & RESIZE ──────────────────────────────────
+    function handleResize() {
       width = window.innerWidth;
       height = window.innerHeight;
-      cv.width = Math.floor(width * dpr);
-      cv.height = Math.floor(height * dpr);
-      cv.style.width = `${width}px`;
-      cv.style.height = `${height}px`;
-      c.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      if (particles.length === 0) {
-        initParticles();
-      }
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     }
+    window.addEventListener('resize', handleResize, { passive: true });
 
-    resize();
-    window.addEventListener('resize', resize, { passive: true });
-
-    // Smooth pointer parallax
-    const onMouseMove = (e: MouseEvent) => {
-      if (!stateRef.current) return;
-      stateRef.current.pointer.x = (e.clientX / width - 0.5) * 2;
-      stateRef.current.pointer.y = (e.clientY / height - 0.5) * 2;
-    };
-    window.addEventListener('mousemove', onMouseMove, { passive: true });
-
-    // Tab visibility handling
-    const onVisibilityChange = () => {
+    const handleVisibilityChange = () => {
       isTabVisible = !document.hidden;
       if (isTabVisible) {
         lastTime = performance.now();
@@ -116,944 +891,303 @@ export default function ExperienceCanvas({ stateRef }: Props) {
         cancelAnimationFrame(animId);
       }
     };
-    document.addEventListener('visibilitychange', onVisibilityChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // ── MAIN RENDER LOOP ──────────────────────────────────────────────
-    function renderLoop(currentTime: number) {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!stateRef.current) return;
+      stateRef.current.pointer.x = (e.clientX / width - 0.5) * 2;
+      stateRef.current.pointer.y = (e.clientY / height - 0.5) * 2;
+    };
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+
+    // ── 12. CONTINUOUS RAF RENDER LOOP (60fps) ────────────────────────
+    function renderLoop(now: number) {
       if (!isTabVisible) return;
 
-      const dt = Math.min((currentTime - lastTime) / 1000, 0.1);
-      lastTime = currentTime;
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
+      lastTime = now;
 
       const state = stateRef.current;
       const isReduced = state?.reducedMotion ?? false;
 
-      // Increment continuous ambient animation regardless of scroll!
       if (!isReduced) {
         ambientTime += dt;
-        // Smooth pointer lerp
         if (state) {
-          state.pointer.currentX += (state.pointer.x - state.pointer.currentX) * 0.05;
-          state.pointer.currentY += (state.pointer.y - state.pointer.currentY) * 0.05;
+          state.pointer.currentX += (state.pointer.x - state.pointer.currentX) * 0.04;
+          state.pointer.currentY += (state.pointer.y - state.pointer.currentY) * 0.04;
         }
       }
 
       const activeSection = state ? state.activeSection : 0;
       const sectionProgress = state ? state.sectionProgress : 0;
-      const overallProgress = state ? state.scrollProgress : 0;
-      const ptrX = state ? state.pointer.currentX : 0;
-      const ptrY = state ? state.pointer.currentY : 0;
+      const px = state ? state.pointer.currentX : 0;
+      const py = state ? state.pointer.currentY : 0;
 
-      // 1. Clear & Background Sky / Earth Atmosphere
-      drawAtmosphere(c, width, height, ambientTime, overallProgress, ptrX, ptrY);
+      // ── CINEMATIC CAMERA INTERPOLATION ──────────────────────────────
+      const targetKF = CAMERA_KEYFRAMES[Math.min(activeSection, CAMERA_KEYFRAMES.length - 1)];
+      const nextKF = CAMERA_KEYFRAMES[Math.min(activeSection + 1, CAMERA_KEYFRAMES.length - 1)];
 
-      // 2. Landscape Topology & Industrial Complex Footprint
-      drawIndustrialTopology(c, width, height, ambientTime, activeSection, sectionProgress, ptrX, ptrY);
+      const blendedTargetPos = new THREE.Vector3().lerpVectors(targetKF.pos, nextKF.pos, sectionProgress * 0.45);
+      const blendedLookTarget = new THREE.Vector3().lerpVectors(targetKF.target, nextKF.target, sectionProgress * 0.45);
 
-      // 3. Environmental Particles & Air Currents (Continuous Ambient Motion)
-      drawParticles(c, width, height, ambientTime, activeSection, isReduced);
+      // Organic subtle mouse parallax
+      blendedTargetPos.x += px * 12;
+      blendedTargetPos.y += py * -8;
 
-      // 4. Section-Specific Intelligence & Visual Phenomena
-      drawNarrativeLayers(c, width, height, ambientTime, activeSection, sectionProgress);
+      const lerpSpeed = isReduced ? 1.0 : 0.045;
+      curPos.lerp(blendedTargetPos, lerpSpeed);
+      curTarget.lerp(blendedLookTarget, lerpSpeed);
 
-      // 5. Scientific Telemetry Vignette & Coordinate Grids
-      drawTelemetryOverlay(c, width, height, ambientTime, activeSection, overallProgress);
+      camera.position.copy(curPos);
+      camera.lookAt(curTarget);
+
+      // ── AMBIENT PHYSICS: REALISTIC VOLUMETRIC SMOKE PLUME ────────────
+      for (let i = 0; i < SMOKE_COUNT; i++) {
+        const p = smokeParticles[i];
+        p.life += dt * 32;
+
+        if (p.life > p.maxLife) {
+          p.life = 0;
+          p.x = 15 + (Math.random() - 0.5) * 1.4;
+          p.y = 68;
+          p.z = -10 + (Math.random() - 0.5) * 1.4;
+          p.scale = 3.5;
+        }
+
+        // Upward expansion with wind drift and turbulence
+        p.x += p.vx + Math.sin(ambientTime * 0.9 + i) * 0.08;
+        p.y += p.vy;
+        p.z += p.vz;
+        p.scale += dt * 4.2;
+
+        const progress = p.life / p.maxLife;
+        // Bell-curve opacity: softly rises then fades into atmosphere
+        const alpha = Math.sin(progress * Math.PI) * p.baseOpacity;
+
+        p.sprite.position.set(p.x, p.y, p.z);
+        p.sprite.scale.set(p.scale, p.scale, 1);
+        (p.sprite.material as THREE.SpriteMaterial).opacity = Math.max(0, alpha);
+      }
+
+      // ── AMBIENT PHYSICS: WATER CANAL RIPPLES & SURFACE MOTION ─────────
+      waterNormalTex.offset.x = (ambientTime * 0.02) % 1;
+      waterNormalTex.offset.y = (ambientTime * 0.015) % 1;
+
+      ripples.forEach((rip, idx) => {
+        const rTime = (ambientTime * 0.4 + idx * (1 / RIPPLE_COUNT)) % 1;
+        const scale = 1 + rTime * 7;
+        rip.scale.set(scale, scale, scale);
+        (rip.material as THREE.MeshBasicMaterial).opacity = Math.max(0, (1 - rTime) * 0.65);
+      });
+
+      // ── AMBIENT PHYSICS: DUST & ATMOSPHERIC PARTICLES ────────────────
+      const dAttr = dustGeo.attributes.position as THREE.BufferAttribute;
+      for (let d = 1; d < DUST_COUNT * 3; d += 3) {
+        let dy = dAttr.getY(d / 3);
+        dy -= 0.09;
+        if (dy < 2) dy = 88;
+        dAttr.setY(d / 3, dy);
+      }
+      dustGeo.attributes.position.needsUpdate = true;
+
+      // ── DYNAMIC THERMAL ANOMALY FOCUS (CHAPTERS 4 & 5) ───────────────
+      if (activeSection === 3 || activeSection === 4) {
+        furnaceGlow.intensity = 3.2 + Math.sin(ambientTime * 5) * 0.8;
+        thermalBoundingBox.material.opacity = 0.55 + Math.sin(ambientTime * 4) * 0.25;
+      } else {
+        furnaceGlow.intensity = Math.max(0, furnaceGlow.intensity - dt * 2.5);
+        thermalBoundingBox.material.opacity = Math.max(0, thermalBoundingBox.material.opacity - dt * 2);
+      }
+
+      // ── PROJECT PHYSICAL WORLD 3D COORDINATES TO 2D DOM OVERLAYS ────
+      const newTelemetryCoords = {
+        co2: getScreenCoords(telemetryWorldAnchors.co2),
+        energy: getScreenCoords(telemetryWorldAnchors.energy),
+        water: getScreenCoords(telemetryWorldAnchors.water),
+        air: getScreenCoords(telemetryWorldAnchors.air),
+        waste: getScreenCoords(telemetryWorldAnchors.waste),
+        furnace: getScreenCoords(telemetryWorldAnchors.furnace),
+        damper: getScreenCoords(telemetryWorldAnchors.damper),
+      };
+      setTelemetryPositions(newTelemetryCoords);
+
+      // Render the Three.js scene
+      renderer.render(scene, camera);
 
       animId = requestAnimationFrame(renderLoop);
     }
 
-    // ── DRAWING PASSES ────────────────────────────────────────────────
+    animId = requestAnimationFrame(renderLoop);
 
-    function drawAtmosphere(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      progress: number,
-      px: number,
-      py: number
-    ) {
-      // Natural deep gradient: charcoal / dark slate / forest undertones
-      const sunShift = Math.sin(t * 0.15) * 20;
-      const grad = c.createRadialGradient(
-        w * 0.7 + px * 30 + sunShift,
-        h * 0.25 + py * 20,
-        50,
-        w * 0.5,
-        h * 0.6,
-        Math.max(w, h) * 0.9
-      );
-
-      // Warm atmospheric morning/dawn sunlight filtering through haze
-      grad.addColorStop(0, 'rgba(28, 38, 32, 1)');      // Subtle forest morning
-      grad.addColorStop(0.35, 'rgba(15, 20, 18, 1)');   // Dark slate
-      grad.addColorStop(0.7, 'rgba(9, 12, 11, 1)');     // Charcoal
-      grad.addColorStop(1, 'rgba(6, 8, 7, 1)');         // Deep near-black
-
-      c.fillStyle = grad;
-      c.fillRect(0, 0, w, h);
-
-      // Volumetric sunlight beam (subtle scientific documentary lighting)
-      c.save();
-      c.globalCompositeOperation = 'screen';
-      const sunBeamGrad = c.createLinearGradient(w * 0.85, 0, w * 0.2, h);
-      const beamIntensity = 0.04 + Math.sin(t * 0.25) * 0.015;
-      sunBeamGrad.addColorStop(0, `rgba(245, 215, 165, ${beamIntensity * 1.5})`);
-      sunBeamGrad.addColorStop(0.4, `rgba(215, 230, 210, ${beamIntensity * 0.7})`);
-      sunBeamGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      c.fillStyle = sunBeamGrad;
-      c.beginPath();
-      c.moveTo(w * 0.6, 0);
-      c.lineTo(w, 0);
-      c.lineTo(w * 0.45, h);
-      c.lineTo(0, h * 0.85);
-      c.closePath();
-      c.fill();
-      c.restore();
-
-      // Atmospheric rolling mist (procedural soft sinusoidal bands)
-      c.save();
-      c.fillStyle = 'rgba(200, 220, 210, 0.012)';
-      for (let i = 0; i < 3; i++) {
-        const yOffset = h * (0.35 + i * 0.18) + Math.sin(t * 0.2 + i * 1.5) * 25;
-        c.beginPath();
-        c.moveTo(0, yOffset);
-        for (let x = 0; x <= w; x += 60) {
-          const wave = Math.sin((x * 0.003) + t * 0.15 + i) * 18 + Math.cos((x * 0.007) - t * 0.1) * 12;
-          c.lineTo(x, yOffset + wave);
-        }
-        c.lineTo(w, h);
-        c.lineTo(0, h);
-        c.closePath();
-        c.fill();
-      }
-      c.restore();
-    }
-
-    function drawIndustrialTopology(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      section: number,
-      prog: number,
-      px: number,
-      py: number
-    ) {
-      c.save();
-      // Parallax shift based on mouse & section progression
-      const zoom = 1.0 + Math.sin(section * 0.2) * 0.05;
-      const cx = w * 0.5 + px * 12;
-      const cy = h * 0.52 + py * 10;
-
-      // Isometric / aerial perspective center
-      const baseX = cx - (w * 0.25) * zoom;
-      const baseY = cy - (h * 0.08) * zoom;
-
-      // Topographic elevation lines (natural terrain surrounding facility)
-      c.strokeStyle = 'rgba(74, 110, 88, 0.07)';
-      c.lineWidth = 1;
-      for (let r = 80; r < Math.max(w, h) * 0.7; r += 75) {
-        c.beginPath();
-        for (let a = 0; a <= Math.PI * 2; a += 0.2) {
-          const distort = Math.sin(a * 4 + r * 0.05) * 14 + Math.cos(a * 2 + t * 0.05) * 8;
-          const x = cx + Math.cos(a) * (r + distort) * 1.4;
-          const y = cy + Math.sin(a) * (r * 0.6 + distort * 0.5);
-          if (a === 0) c.moveTo(x, y);
-          else c.lineTo(x, y);
-        }
-        c.closePath();
-        c.stroke();
-      }
-
-      // Cooling Water Canal (natural blue/slate waterway)
-      const canalGrad = c.createLinearGradient(0, cy + 90, w, cy + 180);
-      canalGrad.addColorStop(0, 'rgba(12, 28, 38, 0.45)');
-      canalGrad.addColorStop(0.5, 'rgba(18, 44, 56, 0.65)');
-      canalGrad.addColorStop(1, 'rgba(10, 24, 32, 0.4)');
-      c.fillStyle = canalGrad;
-      c.beginPath();
-      c.moveTo(0, cy + 140);
-      c.bezierCurveTo(w * 0.3, cy + 110, w * 0.7, cy + 190, w, cy + 140);
-      c.lineTo(w, cy + 210);
-      c.bezierCurveTo(w * 0.7, cy + 250, w * 0.3, cy + 170, 0, cy + 210);
-      c.closePath();
-      c.fill();
-
-      // Water current streamline ripples
-      c.strokeStyle = 'rgba(45, 212, 191, 0.12)';
-      c.lineWidth = 1;
-      c.setLineDash([8, 16]);
-      c.lineDashOffset = -t * 18;
-      c.beginPath();
-      c.moveTo(0, cy + 175);
-      c.bezierCurveTo(w * 0.3, cy + 145, w * 0.7, cy + 225, w, cy + 175);
-      c.stroke();
-      c.setLineDash([]);
-
-      // Forest canopy buffer zone (stylized natural green footprint)
-      c.fillStyle = 'rgba(23, 40, 30, 0.35)';
-      c.beginPath();
-      c.ellipse(cx - w * 0.32, cy - h * 0.12, w * 0.18, h * 0.12, -0.2, 0, Math.PI * 2);
-      c.fill();
-      c.fillStyle = 'rgba(30, 54, 40, 0.25)';
-      c.beginPath();
-      c.ellipse(cx + w * 0.35, cy + h * 0.15, w * 0.15, h * 0.09, 0.3, 0, Math.PI * 2);
-      c.fill();
-
-      // Industrial Structures (Footprint & Architectural Modules)
-      // Main Facility Boundary
-      c.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-      c.lineWidth = 1;
-      c.strokeRect(cx - w * 0.22, cy - h * 0.18, w * 0.44, h * 0.36);
-
-      // Grid guidelines within industrial zone
-      c.strokeStyle = 'rgba(255, 255, 255, 0.025)';
-      for (let gx = cx - w * 0.2; gx <= cx + w * 0.2; gx += 40) {
-        c.beginPath();
-        c.moveTo(gx, cy - h * 0.18);
-        c.lineTo(gx, cy + h * 0.18);
-        c.stroke();
-      }
-      for (let gy = cy - h * 0.16; gy <= cy + h * 0.16; gy += 40) {
-        c.beginPath();
-        c.moveTo(cx - w * 0.22, gy);
-        c.lineTo(cx + w * 0.22, gy);
-        c.stroke();
-      }
-
-      // ── Facility Unit A: Combustion Furnace F-101 ─────────────────────
-      const f101X = cx - w * 0.08;
-      const f101Y = cy - h * 0.04;
-      const f101W = Math.max(90, w * 0.09);
-      const f101H = Math.max(70, h * 0.08);
-
-      // Structure shadow & body
-      c.fillStyle = 'rgba(18, 24, 22, 0.9)';
-      c.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-      c.fillRect(f101X, f101Y, f101W, f101H);
-      c.strokeRect(f101X, f101Y, f101W, f101H);
-
-      // Burner grid lines inside Furnace
-      c.strokeStyle = 'rgba(245, 158, 11, 0.25)';
-      c.lineWidth = 1;
-      c.beginPath();
-      c.moveTo(f101X + 10, f101Y + f101H * 0.5);
-      c.lineTo(f101X + f101W - 10, f101Y + f101H * 0.5);
-      c.moveTo(f101X + f101W * 0.5, f101Y + 10);
-      c.lineTo(f101X + f101W * 0.5, f101Y + f101H - 10);
-      c.stroke();
-
-      // Label: F-101
-      c.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      c.font = '9px "JetBrains Mono", monospace';
-      c.fillText('FURNACE F-101', f101X + 8, f101Y + 16);
-
-      // ── Facility Unit B: Primary Emission Stack 01 ───────────────────
-      const stackX = cx + w * 0.09;
-      const stackY = cy - h * 0.10;
-      c.fillStyle = 'rgba(22, 28, 25, 0.92)';
-      c.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-      c.beginPath();
-      c.arc(stackX, stackY, 18, 0, Math.PI * 2);
-      c.fill();
-      c.stroke();
-
-      c.beginPath();
-      c.arc(stackX, stackY, 8, 0, Math.PI * 2);
-      c.fillStyle = 'rgba(10, 14, 12, 1)';
-      c.fill();
-      c.stroke();
-
-      c.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      c.fillText('STACK 01', stackX - 22, stackY - 24);
-
-      // ── Facility Unit C: Power Substation & Turbine Hall ──────────────
-      const subX = cx - w * 0.18;
-      const subY = cy + h * 0.03;
-      c.fillStyle = 'rgba(16, 22, 20, 0.85)';
-      c.strokeStyle = 'rgba(255, 255, 255, 0.09)';
-      c.fillRect(subX, subY, 70, 50);
-      c.strokeRect(subX, subY, 70, 50);
-      c.fillStyle = 'rgba(255, 255, 255, 0.35)';
-      c.fillText('POWER BUS', subX + 6, subY + 16);
-
-      // Inter-unit pipe rack conduit lines
-      c.strokeStyle = 'rgba(74, 222, 128, 0.18)';
-      c.lineWidth = 1.2;
-      c.beginPath();
-      c.moveTo(subX + 70, subY + 25);
-      c.lineTo(f101X, f101Y + 25);
-      c.lineTo(f101X + f101W, f101Y + 25);
-      c.lineTo(stackX, stackY + 18);
-      c.stroke();
-
-      c.restore();
-    }
-
-    function drawParticles(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      section: number,
-      isReduced: boolean
-    ) {
-      if (isReduced) return;
-
-      c.save();
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-
-        // Update particle
-        p.x += p.vx;
-        p.y += p.vy;
-
-        // Wrap around boundaries
-        if (p.x < 0) p.x = w;
-        if (p.x > w) p.x = 0;
-        if (p.y < 0) {
-          p.y = h;
-          p.x = Math.random() * w;
-        }
-
-        // Particle rendering based on type
-        if (p.type === 'air') {
-          // Atmospheric dust/moisture particle
-          c.fillStyle = `rgba(200, 225, 215, ${p.alpha * (0.8 + Math.sin(t + i) * 0.2)})`;
-          c.beginPath();
-          c.arc(p.x, p.y, p.size * 0.7, 0, Math.PI * 2);
-          c.fill();
-        } else if (p.type === 'thermal') {
-          // Subtle warm thermal emission drift
-          c.fillStyle = `rgba(240, 195, 130, ${p.alpha * 0.6})`;
-          c.beginPath();
-          c.arc(p.x, p.y, p.size * 1.1, 0, Math.PI * 2);
-          c.fill();
-        } else {
-          // Water vapour particle
-          c.fillStyle = `rgba(45, 212, 191, ${p.alpha * 0.5})`;
-          c.beginPath();
-          c.arc(p.x, p.y, p.size * 0.8, 0, Math.PI * 2);
-          c.fill();
-        }
-      }
-      c.restore();
-    }
-
-    function drawNarrativeLayers(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      section: number,
-      prog: number
-    ) {
-      c.save();
-
-      // SECTION 02: THE ENVIRONMENT (Telemetry Nodes: CO2, Energy, Water, Air, Waste)
-      if (section === 1) {
-        drawTelemetryPoints(c, w, h, t, prog);
-      }
-      // SECTION 03: THE PROBLEM (Telemetry Streams with turbulence)
-      else if (section === 2) {
-        drawDataStreamsWithDeviation(c, w, h, t, prog);
-      }
-      // SECTION 04: DETECTION (Environmental reveal of anomaly)
-      else if (section === 3) {
-        drawAnomalyReveal(c, w, h, t, prog);
-      }
-      // SECTION 05: EXPLANATION (Deterministic Root Cause DAG)
-      else if (section === 4) {
-        drawRootCauseNetwork(c, w, h, t, prog);
-      }
-      // SECTION 06: PREDICTION (7-day Trajectory forecast cone)
-      else if (section === 5) {
-        drawPredictionTrajectory(c, w, h, t, prog);
-      }
-      // SECTION 07: SIMULATION (Do Nothing vs ONER Intervention)
-      else if (section === 6) {
-        drawSimulationBranching(c, w, h, t, prog);
-      }
-      // SECTION 08: ACTION (Convergence into control signal)
-      else if (section === 7) {
-        drawActionConvergence(c, w, h, t, prog);
-      }
-      // SECTION 09: AUTOPILOT (Holistic feedback loop)
-      else if (section === 8) {
-        drawAutopilotNexus(c, w, h, t, prog);
-      }
-      // SECTION 10: CONTROL PLANE (Restored harmonious equilibrium)
-      else if (section >= 9) {
-        drawControlPlaneEquilibrium(c, w, h, t, prog);
-      }
-
-      c.restore();
-    }
-
-    // ── SPECIFIC NARRATIVE RENDERERS ──────────────────────────────────
-
-    function drawTelemetryPoints(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      prog: number
-    ) {
-      const alpha = Math.min(prog * 1.5, 1);
-      const points = [
-        { label: 'CO₂', val: '412.8 ppm', sub: 'STACK 01', x: w * 0.58, y: h * 0.42, color: '#4ade80' },
-        { label: 'ENERGY', val: '84.2 MW', sub: 'GRID BUS A', x: w * 0.32, y: h * 0.54, color: '#38bdf8' },
-        { label: 'WATER', val: '1,240 m³/h', sub: 'CANAL FLOW', x: w * 0.65, y: h * 0.68, color: '#2dd4bf' },
-        { label: 'AIR', val: '21.4 µg/m³', sub: 'PERIMETER N', x: w * 0.28, y: h * 0.36, color: '#a3e635' },
-        { label: 'WASTE', val: '0.82 t/batch', sub: 'RECOVERY', x: w * 0.46, y: h * 0.62, color: '#f59e0b' },
-      ];
-
-      points.forEach((pt, idx) => {
-        const pulse = Math.sin(t * 2 + idx) * 3;
-        c.save();
-        c.globalAlpha = alpha;
-
-        // Radar ring around coordinate
-        c.strokeStyle = pt.color;
-        c.lineWidth = 1;
-        c.beginPath();
-        c.arc(pt.x, pt.y, 6 + pulse, 0, Math.PI * 2);
-        c.stroke();
-
-        // Inner solid core
-        c.fillStyle = pt.color;
-        c.beginPath();
-        c.arc(pt.x, pt.y, 2.5, 0, Math.PI * 2);
-        c.fill();
-
-        // Hairline leader line to scientific label
-        c.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        c.beginPath();
-        c.moveTo(pt.x, pt.y);
-        c.lineTo(pt.x + 24, pt.y - 18);
-        c.lineTo(pt.x + 110, pt.y - 18);
-        c.stroke();
-
-        // Telemetry tag box
-        c.fillStyle = 'rgba(10, 14, 12, 0.85)';
-        c.fillRect(pt.x + 24, pt.y - 34, 96, 28);
-        c.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        c.strokeRect(pt.x + 24, pt.y - 34, 96, 28);
-
-        c.fillStyle = '#ffffff';
-        c.font = '600 10px "Space Grotesk", sans-serif';
-        c.fillText(`${pt.label} · ${pt.val}`, pt.x + 30, pt.y - 20);
-
-        c.fillStyle = 'rgba(255, 255, 255, 0.45)';
-        c.font = '8px "JetBrains Mono", monospace';
-        c.fillText(pt.sub, pt.x + 30, pt.y - 10);
-
-        c.restore();
-      });
-    }
-
-    function drawDataStreamsWithDeviation(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      prog: number
-    ) {
-      c.save();
-      // Flowing telemetry streams through facility corridors
-      const startX = w * 0.25;
-      const endX = w * 0.75;
-      const midY = h * 0.5;
-
-      const lines = [
-        { yOffset: -50, label: 'STREAM_01: NATURAL GAS', normal: true },
-        { yOffset: -20, label: 'STREAM_02: COMBUSTION TEMP', normal: false }, // Begins deviating
-        { yOffset: 15, label: 'STREAM_03: OUTFLOW CO₂', normal: true },
-        { yOffset: 45, label: 'STREAM_04: POWER DEMAND', normal: true },
-      ];
-
-      lines.forEach((line, lIdx) => {
-        c.beginPath();
-        c.lineWidth = line.normal ? 1.2 : 2.0;
-        c.strokeStyle = line.normal ? 'rgba(74, 222, 128, 0.4)' : 'rgba(245, 158, 11, 0.8)';
-
-        for (let x = startX; x <= endX; x += 15) {
-          const ratio = (x - startX) / (endX - startX);
-          let deviation = 0;
-          if (!line.normal && ratio > 0.45) {
-            // Subtle turbulence appears in combustion line
-            deviation = Math.sin(ratio * 15 - t * 3) * 16 * Math.min(prog * 2, 1);
-          }
-          const y = midY + line.yOffset + Math.sin(ratio * 8 + t * 2) * 5 + deviation;
-          if (x === startX) c.moveTo(x, y);
-          else c.lineTo(x, y);
-        }
-        c.stroke();
-
-        // Stream pulses
-        const pulsePos = (t * 0.35 + lIdx * 0.25) % 1;
-        const pulseX = startX + pulsePos * (endX - startX);
-        const pulseY = midY + line.yOffset + (line.normal ? 0 : Math.sin(pulsePos * 15 - t * 3) * 12);
-
-        c.fillStyle = line.normal ? '#4ade80' : '#f59e0b';
-        c.beginPath();
-        c.arc(pulseX, pulseY, 3, 0, Math.PI * 2);
-        c.fill();
-      });
-
-      c.restore();
-    }
-
-    function drawAnomalyReveal(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      prog: number
-    ) {
-      c.save();
-      const fx = w * 0.42;
-      const fy = h * 0.48;
-
-      // Anomaly thermal aura expanding around Furnace F-101
-      const auraRad = 50 + Math.sin(t * 3) * 12;
-      const auraGrad = c.createRadialGradient(fx, fy, 5, fx, fy, auraRad);
-      auraGrad.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
-      auraGrad.addColorStop(0.6, 'rgba(239, 68, 68, 0.15)');
-      auraGrad.addColorStop(1, 'rgba(239, 68, 68, 0)');
-
-      c.fillStyle = auraGrad;
-      c.beginPath();
-      c.arc(fx, fy, auraRad, 0, Math.PI * 2);
-      c.fill();
-
-      // Anomaly boundary contour lines
-      c.strokeStyle = 'rgba(245, 158, 11, 0.7)';
-      c.lineWidth = 1;
-      c.setLineDash([4, 4]);
-      c.beginPath();
-      c.arc(fx, fy, auraRad * 0.8, 0, Math.PI * 2);
-      c.stroke();
-      c.setLineDash([]);
-
-      // Subtle scientific crosshair & data callout (Revealed by the environment)
-      c.strokeStyle = '#ef4444';
-      c.beginPath();
-      c.moveTo(fx - 15, fy);
-      c.lineTo(fx + 15, fy);
-      c.moveTo(fx, fy - 15);
-      c.lineTo(fx, fy + 15);
-      c.stroke();
-
-      // Precision Anomaly Tag
-      const cardX = fx + 65;
-      const cardY = fy - 40;
-      c.fillStyle = 'rgba(12, 16, 14, 0.9)';
-      c.strokeStyle = 'rgba(245, 158, 11, 0.4)';
-      c.fillRect(cardX, cardY, 190, 68);
-      c.strokeRect(cardX, cardY, 190, 68);
-
-      c.fillStyle = '#f59e0b';
-      c.font = '600 11px "Space Grotesk", sans-serif';
-      c.fillText('ANOMALY DETECTED', cardX + 12, cardY + 20);
-
-      c.fillStyle = '#d4d4d8';
-      c.font = '9px "JetBrains Mono", monospace';
-      c.fillText('ISOLATION SCORE: 0.884 [ALERT]', cardX + 12, cardY + 36);
-      c.fillText('THERMAL DEVIATION: +18.4°C', cardX + 12, cardY + 50);
-
-      c.restore();
-    }
-
-    function drawRootCauseNetwork(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      prog: number
-    ) {
-      c.save();
-      // Directed Acyclic Graph (DAG) representing deterministic root cause
-      const nodes = [
-        { id: 'Furnace', x: w * 0.22, y: h * 0.50, val: 'F-101 BURNER' },
-        { id: 'Temperature', x: w * 0.36, y: h * 0.42, val: '+18.4°C DRIFT' },
-        { id: 'Natural Gas', x: w * 0.50, y: h * 0.36, val: '+6.2% FEED' },
-        { id: 'Energy', x: w * 0.64, y: h * 0.44, val: 'kWh/ton +4.1%' },
-        { id: 'NOx', x: w * 0.76, y: h * 0.38, val: 'NOx +12.8%' },
-        { id: 'CO₂', x: w * 0.86, y: h * 0.52, val: 'EXCESS +14.2 t' },
-      ];
-
-      // Connecting edges
-      for (let i = 0; i < nodes.length - 1; i++) {
-        const n1 = nodes[i];
-        const n2 = nodes[i + 1];
-
-        c.strokeStyle = 'rgba(74, 222, 128, 0.45)';
-        c.lineWidth = 1.5;
-        c.beginPath();
-        c.moveTo(n1.x, n1.y);
-        c.lineTo(n2.x, n2.y);
-        c.stroke();
-
-        // Dynamic energy pulse traversing causal chain
-        const edgeProgress = ((t * 0.8 + i * 0.2) % 1);
-        const px = n1.x + (n2.x - n1.x) * edgeProgress;
-        const py = n1.y + (n2.y - n1.y) * edgeProgress;
-
-        c.fillStyle = '#4ade80';
-        c.beginPath();
-        c.arc(px, py, 3, 0, Math.PI * 2);
-        c.fill();
-      }
-
-      // Render Nodes
-      nodes.forEach((node) => {
-        c.fillStyle = 'rgba(12, 18, 15, 0.9)';
-        c.strokeStyle = '#4ade80';
-        c.lineWidth = 1;
-        c.beginPath();
-        c.roundRect(node.x - 42, node.y - 20, 84, 40, 8);
-        c.fill();
-        c.stroke();
-
-        c.fillStyle = '#ffffff';
-        c.font = '600 10px "Space Grotesk", sans-serif';
-        c.textAlign = 'center';
-        c.fillText(node.id, node.x, node.y - 4);
-
-        c.fillStyle = '#4ade80';
-        c.font = '8px "JetBrains Mono", monospace';
-        c.fillText(node.val, node.x, node.y + 11);
-      });
-      c.textAlign = 'left';
-
-      // Synthesis Banner: THERMAL EFFICIENCY DEGRADATION
-      const synthW = Math.min(w * 0.6, 420);
-      const synthX = (w - synthW) * 0.5;
-      const synthY = h * 0.68;
-
-      c.fillStyle = 'rgba(15, 22, 18, 0.95)';
-      c.strokeStyle = 'rgba(74, 222, 128, 0.5)';
-      c.lineWidth = 1;
-      c.beginPath();
-      c.roundRect(synthX, synthY, synthW, 56, 10);
-      c.fill();
-      c.stroke();
-
-      c.fillStyle = '#6fe38b';
-      c.font = '700 12px "Space Grotesk", sans-serif';
-      c.fillText('ROOT CAUSE CONFIRMED', synthX + 20, synthY + 22);
-
-      c.fillStyle = '#ffffff';
-      c.font = '600 13px "Space Grotesk", sans-serif';
-      c.fillText('THERMAL EFFICIENCY DEGRADATION', synthX + 20, synthY + 41);
-
-      c.restore();
-    }
-
-    function drawPredictionTrajectory(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      prog: number
-    ) {
-      c.save();
-      const originX = w * 0.25;
-      const originY = h * 0.55;
-      const horizonW = w * 0.55;
-
-      // Forecast Confidence Shading (Conformal prediction bands)
-      const grad = c.createLinearGradient(originX, originY, originX + horizonW, originY);
-      grad.addColorStop(0, 'rgba(74, 222, 128, 0.05)');
-      grad.addColorStop(1, 'rgba(245, 158, 11, 0.15)');
-
-      c.fillStyle = grad;
-      c.beginPath();
-      c.moveTo(originX, originY);
-      // Upper bound
-      for (let x = 0; x <= horizonW; x += 20) {
-        const r = x / horizonW;
-        const upper = originY - r * 60 - Math.sin(r * 5 + t) * 8 - r * 35;
-        c.lineTo(originX + x, upper);
-      }
-      // Lower bound
-      for (let x = horizonW; x >= 0; x -= 20) {
-        const r = x / horizonW;
-        const lower = originY - r * 60 + Math.sin(r * 5 + t) * 8 + r * 35;
-        c.lineTo(originX + x, lower);
-      }
-      c.closePath();
-      c.fill();
-
-      // Median Expected Trajectory Line
-      c.strokeStyle = '#4ade80';
-      c.lineWidth = 2;
-      c.beginPath();
-      c.moveTo(originX, originY);
-      for (let x = 0; x <= horizonW; x += 15) {
-        const r = x / horizonW;
-        const y = originY - r * 60 + Math.sin(r * 6 - t * 2) * 6;
-        c.lineTo(originX + x, y);
-      }
-      c.stroke();
-
-      // 7-day Time Axis Ticks
-      const days = ['NOW', '+24H', '+48H', '+72H', '+5D', '+7D'];
-      days.forEach((day, idx) => {
-        const tx = originX + (idx / (days.length - 1)) * horizonW;
-        c.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        c.beginPath();
-        c.moveTo(tx, originY + 25);
-        c.lineTo(tx, originY + 35);
-        c.stroke();
-
-        c.fillStyle = 'rgba(255, 255, 255, 0.45)';
-        c.font = '9px "JetBrains Mono", monospace';
-        c.textAlign = 'center';
-        c.fillText(day, tx, originY + 50);
-      });
-      c.textAlign = 'left';
-
-      c.restore();
-    }
-
-    function drawSimulationBranching(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      prog: number
-    ) {
-      c.save();
-      const splitX = w * 0.35;
-      const splitY = h * 0.52;
-      const branchW = w * 0.45;
-
-      // Trajectory 1: DO NOTHING (Upper, Warning Red/Amber)
-      c.strokeStyle = '#f87171';
-      c.lineWidth = 2.2;
-      c.beginPath();
-      c.moveTo(splitX, splitY);
-      c.bezierCurveTo(splitX + branchW * 0.4, splitY - 20, splitX + branchW * 0.7, splitY - 90, splitX + branchW, splitY - 110);
-      c.stroke();
-
-      // Label: DO NOTHING
-      c.fillStyle = '#f87171';
-      c.font = '600 12px "Space Grotesk", sans-serif';
-      c.fillText('DO NOTHING', splitX + branchW + 12, splitY - 106);
-      c.fillStyle = 'rgba(248, 113, 113, 0.7)';
-      c.font = '9px "JetBrains Mono", monospace';
-      c.fillText('+14.2% CARBON DRIFT · COMPLIANCE BREACH', splitX + branchW + 12, splitY - 92);
-
-      // Trajectory 2: ONER INTERVENTION (Lower, Emerald Green)
-      c.strokeStyle = '#4ade80';
-      c.lineWidth = 2.2;
-      c.beginPath();
-      c.moveTo(splitX, splitY);
-      c.bezierCurveTo(splitX + branchW * 0.3, splitY + 40, splitX + branchW * 0.6, splitY + 70, splitX + branchW, splitY + 75);
-      c.stroke();
-
-      // Label: ONER INTERVENTION
-      c.fillStyle = '#4ade80';
-      c.font = '600 12px "Space Grotesk", sans-serif';
-      c.fillText('ONER INTERVENTION', splitX + branchW + 12, splitY + 72);
-      c.fillStyle = 'rgba(74, 222, 128, 0.7)';
-      c.font = '9px "JetBrains Mono", monospace';
-      c.fillText('-210 tCO₂e/MO · EFFICIENCY RESTORED', splitX + branchW + 12, splitY + 86);
-
-      // Branching Node Marker
-      c.fillStyle = '#ffffff';
-      c.beginPath();
-      c.arc(splitX, splitY, 4, 0, Math.PI * 2);
-      c.fill();
-
-      c.restore();
-    }
-
-    function drawActionConvergence(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      prog: number
-    ) {
-      c.save();
-      const cx = w * 0.5;
-      const cy = h * 0.52;
-
-      // Streams converging into central clean control signal
-      const angles = [0, Math.PI * 0.33, Math.PI * 0.66, Math.PI, Math.PI * 1.33, Math.PI * 1.66];
-      angles.forEach((ang, idx) => {
-        const radius = 180 - Math.min(prog * 100, 80);
-        const sx = cx + Math.cos(ang + t * 0.2) * radius;
-        const sy = cy + Math.sin(ang + t * 0.2) * radius;
-
-        c.strokeStyle = 'rgba(74, 222, 128, 0.35)';
-        c.lineWidth = 1;
-        c.beginPath();
-        c.moveTo(sx, sy);
-        c.lineTo(cx, cy);
-        c.stroke();
-
-        // Convergence particle
-        const rPos = (t * 0.5 + idx * 0.16) % 1;
-        const px = sx + (cx - sx) * rPos;
-        const py = sy + (cy - sy) * rPos;
-
-        c.fillStyle = '#4ade80';
-        c.beginPath();
-        c.arc(px, py, 2.5, 0, Math.PI * 2);
-        c.fill();
-      });
-
-      // Central Control Capsule
-      c.fillStyle = 'rgba(12, 18, 15, 0.95)';
-      c.strokeStyle = '#4ade80';
-      c.lineWidth = 1.5;
-      c.beginPath();
-      c.roundRect(cx - 130, cy - 35, 260, 70, 12);
-      c.fill();
-      c.stroke();
-
-      c.fillStyle = '#4ade80';
-      c.font = '600 11px "Space Grotesk", sans-serif';
-      c.textAlign = 'center';
-      c.fillText('OPTIMAL CONTROL DISPATCH', cx, cy - 12);
-
-      c.fillStyle = '#ffffff';
-      c.font = '9px "JetBrains Mono", monospace';
-      c.fillText('ACTUATOR: DAMPER_TRIM -> 1.042', cx, cy + 4);
-      c.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      c.fillText('STATUS: CLOSED-LOOP ACTIVE', cx, cy + 18);
-      c.textAlign = 'left';
-
-      c.restore();
-    }
-
-    function drawAutopilotNexus(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      prog: number
-    ) {
-      c.save();
-      const cx = w * 0.5;
-      const cy = h * 0.52;
-      const r = Math.min(w, h) * 0.22;
-
-      // Circular Autopilot Orbital Loop
-      c.strokeStyle = 'rgba(74, 222, 128, 0.25)';
-      c.lineWidth = 1.5;
-      c.beginPath();
-      c.arc(cx, cy, r, 0, Math.PI * 2);
-      c.stroke();
-
-      // The 6 Pillars of ONER
-      const pillars = ['SENSE', 'DETECT', 'EXPLAIN', 'PREDICT', 'SIMULATE', 'ACT'];
-      pillars.forEach((p, idx) => {
-        const ang = (idx / 6) * Math.PI * 2 - Math.PI / 2 + t * 0.08;
-        const px = cx + Math.cos(ang) * r;
-        const py = cy + Math.sin(ang) * r;
-
-        // Pillar node
-        c.fillStyle = 'rgba(14, 22, 18, 0.95)';
-        c.strokeStyle = '#4ade80';
-        c.lineWidth = 1;
-        c.beginPath();
-        c.arc(px, py, 22, 0, Math.PI * 2);
-        c.fill();
-        c.stroke();
-
-        c.fillStyle = '#ffffff';
-        c.font = '600 8.5px "Space Grotesk", sans-serif';
-        c.textAlign = 'center';
-        c.fillText(p, px, py + 3);
-      });
-
-      // Core Hub
-      c.fillStyle = '#4ade80';
-      c.beginPath();
-      c.arc(cx, cy, 6, 0, Math.PI * 2);
-      c.fill();
-
-      c.textAlign = 'left';
-      c.restore();
-    }
-
-    function drawControlPlaneEquilibrium(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      prog: number
-    ) {
-      c.save();
-      // Whole facility in green/teal harmonious equilibrium
-      const cx = w * 0.5;
-      const cy = h * 0.48;
-
-      // Soft ambient pulse across the digital twin
-      const pulseRad = 120 + Math.sin(t * 1.5) * 15;
-      const grad = c.createRadialGradient(cx, cy, 20, cx, cy, pulseRad);
-      grad.addColorStop(0, 'rgba(74, 222, 128, 0.08)');
-      grad.addColorStop(1, 'rgba(74, 222, 128, 0)');
-
-      c.fillStyle = grad;
-      c.beginPath();
-      c.arc(cx, cy, pulseRad, 0, Math.PI * 2);
-      c.fill();
-
-      c.restore();
-    }
-
-    function drawTelemetryOverlay(
-      c: CanvasRenderingContext2D,
-      w: number,
-      h: number,
-      t: number,
-      section: number,
-      prog: number
-    ) {
-      c.save();
-      // Subtle corner scientific coordinate labels
-      c.fillStyle = 'rgba(255, 255, 255, 0.22)';
-      c.font = '9px "JetBrains Mono", monospace';
-      c.fillText('SYS_COORD: 37°24\'11"N 122°08\'44"W', 36, h - 32);
-      c.fillText(`CADENCE: 60Hz · TIMESTEP: ${(t).toFixed(1)}s`, 36, h - 18);
-
-      c.textAlign = 'right';
-      c.fillText(`STAGE: 0${section + 1}/10`, w - 36, h - 32);
-      c.fillText(`BUFFER PROGRESS: ${(prog * 100).toFixed(0)}%`, w - 36, h - 18);
-      c.textAlign = 'left';
-
-      c.restore();
-    }
-
-    // ── CLEANUP ───────────────────────────────────────────────────────
+    // ── 13. CLEANUP ───────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(animId);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('visibilitychange', onVisibilityChange);
-      reducedMotionQuery.removeEventListener('change', onMotionChange);
+      window.removeEventListener('resize', handleResize);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('mousemove', handleMouseMove);
+
+      terrainGeo.dispose();
+      terrainMat.dispose();
+      waterGeo.dispose();
+      waterMat.dispose();
+      skyGeo.dispose();
+      skyMat.dispose();
+      coniferMesh.geometry.dispose();
+      coniferMat.dispose();
+      smokeTex.dispose();
+      steelTex.dispose();
+      concreteTex.dispose();
+      waterNormalTex.dispose();
+      skyTex.dispose();
+      renderer.dispose();
     };
   }, [stateRef]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      id="oner-experience-canvas"
-      aria-hidden="true"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        zIndex: 1,
-        pointerEvents: 'none',
-        display: 'block',
-      }}
-    />
+    <div ref={containerRef} className="fixed inset-0 pointer-events-none z-10">
+      <canvas
+        ref={canvasRef}
+        id="oner-experience-canvas"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          width: '100vw',
+          height: '100vh',
+          display: 'block',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* ── 3D-ANCHORED SPATIAL TELEMETRY OVERLAYS ────────────────── */}
+      {/* Chapter 02: Pinned physical telemetry pins */}
+      {stateRef.current?.activeSection === 1 && (
+        <div className="absolute inset-0 pointer-events-none transition-opacity duration-500">
+          {/* Stack 01 -> CO2 */}
+          {telemetryPositions.co2?.visible && (
+            <div
+              className="absolute env-bracket-tag"
+              style={{
+                left: `${telemetryPositions.co2.x}px`,
+                top: `${telemetryPositions.co2.y}px`,
+                transform: 'translate(20px, -50px)',
+              }}
+            >
+              <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 exp-font-mono">
+                <span>CO₂</span>
+                <span className="text-white">412.8 ppm</span>
+              </div>
+              <div className="text-[9px] text-zinc-400 exp-font-mono">STACK 01 RIM</div>
+            </div>
+          )}
+
+          {/* Substation -> Energy */}
+          {telemetryPositions.energy?.visible && (
+            <div
+              className="absolute env-bracket-tag"
+              style={{
+                left: `${telemetryPositions.energy.x}px`,
+                top: `${telemetryPositions.energy.y}px`,
+                transform: 'translate(-140px, -30px)',
+              }}
+            >
+              <div className="flex items-center gap-2 text-xs font-bold text-sky-400 exp-font-mono">
+                <span>ENERGY</span>
+                <span className="text-white">84.2 MW</span>
+              </div>
+              <div className="text-[9px] text-zinc-400 exp-font-mono">GRID BUS A</div>
+            </div>
+          )}
+
+          {/* Cooling Canal Outflow -> Water */}
+          {telemetryPositions.water?.visible && (
+            <div
+              className="absolute env-bracket-tag"
+              style={{
+                left: `${telemetryPositions.water.x}px`,
+                top: `${telemetryPositions.water.y}px`,
+                transform: 'translate(20px, -20px)',
+              }}
+            >
+              <div className="flex items-center gap-2 text-xs font-bold text-teal-400 exp-font-mono">
+                <span>WATER</span>
+                <span className="text-white">1,240 m³/h</span>
+              </div>
+              <div className="text-[9px] text-zinc-400 exp-font-mono">CANAL INFLOW</div>
+            </div>
+          )}
+
+          {/* Forest Perimeter -> Air */}
+          {telemetryPositions.air?.visible && (
+            <div
+              className="absolute env-bracket-tag"
+              style={{
+                left: `${telemetryPositions.air.x}px`,
+                top: `${telemetryPositions.air.y}px`,
+                transform: 'translate(-120px, -40px)',
+              }}
+            >
+              <div className="flex items-center gap-2 text-xs font-bold text-lime-400 exp-font-mono">
+                <span>AIR</span>
+                <span className="text-white">21.4 µg/m³</span>
+              </div>
+              <div className="text-[9px] text-zinc-400 exp-font-mono">NORTH BUFFER</div>
+            </div>
+          )}
+
+          {/* Byproduct -> Waste */}
+          {telemetryPositions.waste?.visible && (
+            <div
+              className="absolute env-bracket-tag"
+              style={{
+                left: `${telemetryPositions.waste.x}px`,
+                top: `${telemetryPositions.waste.y}px`,
+                transform: 'translate(25px, -20px)',
+              }}
+            >
+              <div className="flex items-center gap-2 text-xs font-bold text-amber-400 exp-font-mono">
+                <span>WASTE</span>
+                <span className="text-white">1.8 t/d</span>
+              </div>
+              <div className="text-[9px] text-zinc-400 exp-font-mono">BYPRODUCT VOL</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Chapter 04 & 05: Furnace F-101 Spatial Marker */}
+      {(stateRef.current?.activeSection === 3 || stateRef.current?.activeSection === 4) && telemetryPositions.furnace?.visible && (
+        <div
+          className="absolute env-bracket-tag border-amber-500/40 bg-zinc-950/80 transition-opacity duration-300"
+          style={{
+            left: `${telemetryPositions.furnace.x}px`,
+            top: `${telemetryPositions.furnace.y}px`,
+            transform: 'translate(30px, -60px)',
+          }}
+        >
+          <div className="flex items-center gap-2 text-xs font-bold text-amber-400 exp-font-mono">
+            <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-ping mr-0.5" />
+            <span>THERMAL ANOMALY</span>
+          </div>
+          <div className="text-[10px] text-zinc-300 exp-font-mono mt-0.5">FURNACE F-101 CORE · +18.4°C</div>
+        </div>
+      )}
+
+      {/* Chapter 08: Actuator Damper Spatial Marker */}
+      {stateRef.current?.activeSection === 7 && telemetryPositions.damper?.visible && (
+        <div
+          className="absolute env-bracket-tag border-emerald-500/50 bg-zinc-950/85 transition-opacity duration-300"
+          style={{
+            left: `${telemetryPositions.damper.x}px`,
+            top: `${telemetryPositions.damper.y}px`,
+            transform: 'translate(25px, -30px)',
+          }}
+        >
+          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 exp-font-mono">
+            <span>OPC-UA ACTUATOR</span>
+          </div>
+          <div className="text-[10px] text-zinc-300 exp-font-mono mt-0.5">DAMPER TRIM · TARGET: 1.042</div>
+        </div>
+      )}
+    </div>
   );
 }
