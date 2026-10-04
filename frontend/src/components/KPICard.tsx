@@ -1,5 +1,6 @@
 'use client';
-import { ReactNode, useRef } from 'react';
+
+import React, { ReactNode } from 'react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface KPICardProps {
@@ -8,80 +9,113 @@ interface KPICardProps {
   unit?: string;
   change_pct?: number;
   icon?: ReactNode;
-  accent?: 'green' | 'red' | 'amber' | 'blue' | 'default';
-  size?: 'sm' | 'md' | 'lg';
+  accent?: 'green' | 'red' | 'amber' | 'blue' | 'teal' | 'default';
   subtitle?: string;
+  sparklineData?: number[];
+  isCompact?: boolean;
 }
 
-// Semantic accent styles — these represent environmental meaning, DO NOT change to lime
-const ACCENT_STYLES = {
-  green:   { border: 'rgba(0,212,164,0.25)',   bg: 'rgba(0,212,164,0.05)',   icon: '#00d4a4' },
-  red:     { border: 'rgba(239,68,68,0.25)',    bg: 'rgba(239,68,68,0.05)',   icon: '#ef4444' },
-  amber:   { border: 'rgba(245,158,11,0.25)',   bg: 'rgba(245,158,11,0.05)', icon: '#f59e0b' },
-  blue:    { border: 'rgba(14,165,233,0.25)',   bg: 'rgba(14,165,233,0.05)', icon: '#0ea5e9' },
-  default: { border: '#1c1c1c',                  bg: 'rgba(255,255,255,0.01)', icon: '#8a8a8a' },
-};
+export default function KPICard({
+  title,
+  value,
+  unit,
+  change_pct,
+  icon,
+  accent = 'default',
+  subtitle,
+  isCompact = false,
+}: KPICardProps) {
+  const isUp = change_pct !== undefined && change_pct > 0;
+  const isDown = change_pct !== undefined && change_pct < 0;
 
-export default function KPICard({ title, value, unit, change_pct, icon, accent = 'default', size = 'md', subtitle }: KPICardProps) {
-  const style = ACCENT_STYLES[accent];
-  const changeBad  = change_pct !== undefined && change_pct > 0;
-  const changeGood = change_pct !== undefined && change_pct < 0;
+  // In environmental emissions, an increase is usually negative (amber/red) and decrease is positive (healthy emerald)
+  const isIncreaseNegative = accent !== 'blue' && accent !== 'teal';
+  const trendColor = change_pct === undefined || change_pct === 0
+    ? 'text-zinc-500'
+    : isUp
+      ? isIncreaseNegative ? 'text-amber-400' : 'text-emerald-400'
+      : isIncreaseNegative ? 'text-emerald-400' : 'text-zinc-400';
+
+  if (isCompact) {
+    return (
+      <div className="py-2.5 px-3 flex flex-col justify-between group">
+        <div className="flex items-center justify-between gap-1 text-zinc-400 mb-1">
+          <span className="text-[11px] font-medium text-zinc-400 truncate">
+            {title}
+          </span>
+          {icon && <span className="text-zinc-500 group-hover:text-zinc-300 transition-colors">{icon}</span>}
+        </div>
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-xl sm:text-2xl font-bold font-mono tracking-tight text-zinc-100">
+            {value}
+          </span>
+          {unit && (
+            <span className="text-[11px] font-mono text-zinc-400">
+              {unit}
+            </span>
+          )}
+        </div>
+        <div className="mt-1 flex items-center justify-between text-[10px]">
+          {change_pct !== undefined ? (
+            <div className={`flex items-center gap-0.5 font-mono ${trendColor}`}>
+              {isUp ? <TrendingUp size={11} /> : isDown ? <TrendingDown size={11} /> : <Minus size={11} />}
+              <span>{isUp ? '+' : ''}{change_pct.toFixed(1)}%</span>
+            </div>
+          ) : (
+            <span className="text-zinc-400 font-mono truncate">{subtitle || 'nominal'}</span>
+          )}
+          {subtitle && change_pct !== undefined && (
+            <span className="text-zinc-400 truncate ml-1">{subtitle}</span>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      data-prox
-      className="prox-card rounded-xl p-4 transition-all duration-300 animate-fade-in"
-      style={{
-        background: `linear-gradient(135deg, ${style.bg}, rgba(5,5,5,0.9))`,
-        border: `1px solid ${style.border}`,
-        boxShadow: '0 2px 16px rgba(0,0,0,0.5)',
-        cursor: 'default',
-      }}
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div
-          className="text-xs font-medium uppercase tracking-wider"
-          style={{ color: '#555', letterSpacing: '0.08em' }}
-        >
-          {title}
+    <div className="p-4 rounded-xl bg-[#0e1410] border border-[#162018] hover:border-[#223026] transition-all flex flex-col justify-between group">
+      <div>
+        {/* Header row */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <span className="text-xs font-medium text-zinc-400 truncate">
+            {title}
+          </span>
+          {icon && (
+            <div className="text-zinc-500 group-hover:text-zinc-300 transition-colors">
+              {icon}
+            </div>
+          )}
         </div>
-        {icon && (
-          <div className="p-1.5 rounded-lg flex-shrink-0" style={{ color: style.icon, background: style.bg }}>
-            {icon}
+
+        {/* Large Telemetry Value */}
+        <div className="flex items-baseline gap-1.5">
+          <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-zinc-100">
+            {value}
+          </span>
+          {unit && (
+            <span className="text-xs font-mono text-zinc-400 font-medium">
+              {unit}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Context footer */}
+      <div className="mt-3 pt-2 border-t border-[#141b15] flex items-center justify-between text-xs">
+        {change_pct !== undefined ? (
+          <div className={`flex items-center gap-1 font-mono text-[11px] ${trendColor}`}>
+            {isUp ? <TrendingUp size={12} /> : isDown ? <TrendingDown size={12} /> : <Minus size={12} />}
+            <span>
+              {isUp ? '+' : ''}{change_pct.toFixed(1)}%
+            </span>
+            <span className="text-zinc-400 text-[10px] ml-1 font-sans">vs 7d avg</span>
           </div>
+        ) : subtitle ? (
+          <span className="text-[11px] text-zinc-400 font-sans truncate">{subtitle}</span>
+        ) : (
+          <span className="text-[11px] text-zinc-400 font-mono">NOMINAL</span>
         )}
       </div>
-
-      <div className="flex items-end gap-1.5 flex-wrap">
-        <div
-          className={`font-bold leading-none ${
-            size === 'lg' ? 'text-3xl' : size === 'sm' ? 'text-xl' : 'text-2xl'
-          }`}
-          style={{
-            color: accent === 'default' ? '#f5f5f5' : style.icon,
-            fontFamily: 'Space Grotesk, Inter, sans-serif',
-          }}
-        >
-          {value}
-        </div>
-        {unit && (
-          <div className="text-xs mb-0.5" style={{ color: '#555' }}>{unit}</div>
-        )}
-      </div>
-
-      {subtitle && (
-        <div className="text-xs mt-1" style={{ color: '#555' }}>{subtitle}</div>
-      )}
-
-      {change_pct !== undefined && (
-        <div
-          className="flex items-center gap-1 mt-2 text-xs font-medium"
-          style={{ color: changeBad ? '#ef4444' : changeGood ? '#00d4a4' : '#555' }}
-        >
-          {changeBad ? <TrendingUp size={11} /> : changeGood ? <TrendingDown size={11} /> : <Minus size={11} />}
-          <span>{Math.abs(change_pct).toFixed(1)}% vs prior week</span>
-        </div>
-      )}
     </div>
   );
 }

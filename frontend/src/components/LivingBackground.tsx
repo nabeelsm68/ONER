@@ -108,7 +108,7 @@ export default function LivingBackground() {
         const cy = r.top + r.height / 2;
         const d = Math.hypot(x - cx, y - cy);
         const maxD = Math.max(r.width, r.height) * 1.5 + 280;
-        let strength = Math.max(0, Math.min(1, 1 - d / maxD));
+        const strength = Math.max(0, Math.min(1, 1 - d / maxD));
         const px = ((x - r.left) / r.width) * 100;
         const py = ((y - r.top) / r.height) * 100;
         el.style.setProperty('--strength', strength.toFixed(3));

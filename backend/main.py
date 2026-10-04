@@ -197,11 +197,89 @@ def health_check():
     return {"status": "ok", "service": "ONER Backend", "version": "1.0.0"}
 
 
+# ─── Community-to-Industry Network & Accountability Routes ───────────────────
+from community_network import (
+    get_all_reports,
+    get_report_by_id,
+    create_report,
+    record_industry_action,
+    record_government_action,
+    get_government_overview,
+    get_impact_model,
+    ENVIRONMENTAL_PACT,
+    CreateReportRequest,
+    IndustryActionRequest,
+    GovernmentActionRequest,
+)
+
+@app.get("/api/community/reports")
+def list_community_reports():
+    """List all community environmental reports with corroboration details."""
+    return {"reports": get_all_reports()}
+
+@app.get("/api/community/reports/{report_id}")
+def get_community_report(report_id: str):
+    """Retrieve full incident dossier for a community report."""
+    report = get_report_by_id(report_id)
+    if not report:
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+    return report
+
+@app.post("/api/community/reports")
+def submit_community_report(req: CreateReportRequest):
+    """Submit a citizen pollution report with GPS, photo stamp, and automatic AI correlation."""
+    return create_report(req)
+
+@app.post("/api/community/reports/{report_id}/industry-action")
+def take_industry_action(report_id: str, req: IndustryActionRequest):
+    """Record an industrial response, simulation or corrective setpoint change."""
+    report = record_industry_action(report_id, req)
+    if not report:
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+    return report
+
+@app.post("/api/community/reports/{report_id}/government-action")
+def take_government_action(report_id: str, req: GovernmentActionRequest):
+    """Record a regulatory inspection, mandate, escalation, or audit closure."""
+    report = record_government_action(report_id, req)
+    if not report:
+        raise HTTPException(status_code=404, detail=f"Report {report_id} not found")
+    return report
+
+@app.get("/api/industry/cases")
+def industry_cases_overview():
+    """Industry dashboard: pact status, monitored parameters, and open community cases."""
+    all_reps = get_all_reports()
+    open_cases = [r for r in all_reps if r["status"] != "RESOLVED"]
+    return {
+        "pact": ENVIRONMENTAL_PACT,
+        "open_cases_count": len(open_cases),
+        "cases": all_reps,
+    }
+
+@app.get("/api/pact")
+def get_environmental_pact():
+    """Get the active tripartite Environmental Pact details."""
+    return ENVIRONMENTAL_PACT
+
+@app.get("/api/government/overview")
+def government_overview():
+    """Government command center: regional KPIs, facility risk register, and hotspots."""
+    return get_government_overview()
+
+@app.get("/api/impact/model")
+def impact_model():
+    """Business & economic scale model and data-source transparency status."""
+    return get_impact_model()
+
+
 @app.get("/")
 def root():
     return {
         "name": "ONER Environmental AI Autopilot",
         "facility": "Orion Manufacturing Plant",
+        "network": "Community-to-Industry Environmental Accountability Network",
         "docs": "/docs",
         "status": "operational",
     }
+

@@ -1,31 +1,24 @@
-import type { Metadata } from 'next'
-import './globals.css'
-import LivingBackground from '@/components/LivingBackground'
-import HolographicClouds from '@/components/HolographicClouds'
+import type { Metadata } from 'next';
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'ONER — Environmental AI Autopilot',
-  description: 'ONER is an AI-powered environmental intelligence and autopilot platform for industrial facilities. Sense. Predict. Act.',
-  keywords: ['environmental AI', 'carbon emissions', 'industrial monitoring', 'sustainability'],
-}
+  description: 'AI-powered environmental intelligence and industrial control autopilot. Sense. Predict. Act.',
+  keywords: ['environmental AI', 'carbon emissions', 'industrial monitoring', 'sustainability', 'autopilot'],
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-oner-bg text-oner-text antialiased">
-        {/* Holographic Clouds — z-index: 1, mounts once */}
-        <HolographicClouds />
-        {/* Living background — mounts once, persists across all routes (z-index: 2) */}
-        <LivingBackground />
-        {/* Application — z-index: 10 sits above canvas (z-index: 2) */}
-        <div style={{ position: 'relative', zIndex: 10 }}>
+    <html lang="en" className="dark">
+      <body className="bg-[#090d0b] text-[#f0f3f1] antialiased min-h-screen selection:bg-emerald-500/20 selection:text-emerald-300">
+        <div className="relative min-h-screen">
           {children}
         </div>
       </body>
     </html>
-  )
+  );
 }

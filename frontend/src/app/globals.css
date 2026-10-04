@@ -1,283 +1,143 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════
-   ONER — GLOBAL VISUAL VARIABLES
-   Living Environment Theme
-═══════════════════════════════════════════════════════ */
+   ONER — PREMIUM ENVIRONMENTAL INTELLIGENCE & INDUSTRIAL CONTROL
+   Composed control surface, restrained cinematic palette, semantic colors
+   ═══════════════════════════════════════════════════════ */
 :root {
-  /* Global Background System */
-  --bg:          #050505;
-  --bg-deep:     #030303;
-  --panel:       #0a0a0a;
-  --panel-2:     #111111;
-  --line:        #1c1c1c;
-  --line-soft:   #151515;
-
-  /* Text */
-  --text:        #f5f5f5;
-  --text-dim:    #8a8a8a;
-  --text-mute:   #555555;
-
-  /* Global decorative accent (lime/yellow) — NON-SEMANTIC */
-  --lime:        #e6ff3f;
-  --lime-core:   #f2ffb0;
-  --lime-dim:    rgba(230,255,63,0.12);
-
-  /* ─── SEMANTIC COLORS — DO NOT REASSIGN ─── */
-  /* These carry environmental meaning and must remain unchanged */
-  --color-oner-bg:           #050505;
-  --color-oner-surface:      #0a0a0a;
-  --color-oner-card:         #111111;
-  --color-oner-border:       #1c1c1c;
-  --color-oner-accent:       #00d4a4;   /* teal — positive/healthy */
-  --color-oner-green:        #00ff88;
-  --color-oner-blue:         #0ea5e9;   /* blue — water/info */
-  --color-oner-amber:        #f59e0b;   /* amber — warning */
-  --color-oner-red:          #ef4444;   /* red — critical */
-  --color-oner-muted:        #555555;
-  --color-oner-text:         #f5f5f5;
-  --color-oner-text-dim:     #8a8a8a;
+  /* Surfaces: Bloomberg/Palantir-like high-density operational neutrality */
+  --oner-bg: #080A09;
+  --oner-surface: #0E1110;
+  --oner-surface-hover: #121615;
+  --oner-surface-elevated: #141817;
+  --oner-panel: #0E1110;
+  --oner-border: #242A27;
+  --oner-border-subtle: #181E1C;
+  --oner-border-focus: #343E3A;
 
   /* Typography */
-  --font-display: 'Space Grotesk', 'Inter', sans-serif;
-  --font-body:    'Inter', system-ui, sans-serif;
-  --font-mono:    'JetBrains Mono', monospace;
+  --oner-text: #F1F3EE;
+  --oner-text-secondary: #929A95;
+  --oner-text-muted: #626A65;
+  --oner-text-dim: #3E4541;
+
+  /* Primary ONER Brand Accent */
+  --oner-accent: #A8C83A;
+  --oner-accent-highlight: #C4DF61;
+
+  /* Semantic Roles (Restrained, small indicators only) */
+  --oner-healthy: #10B981;      /* Muted green — positive outcome / verified */
+  --oner-healthy-dim: rgba(16, 185, 129, 0.08);
+  --oner-amber: #D97706;        /* Muted amber — warning / drift */
+  --oner-red: #DC2626;          /* Muted red — breach / critical */
+  --oner-teal: #0D9488;         /* Muted teal — water systems */
+  --oner-blue: #0284C7;         /* Muted blue — energy / atmospheric */
 }
 
-/* Tailwind theme tokens — extend, do not replace semantic colors */
 @theme {
-  --color-oner-bg:           #050505;
-  --color-oner-surface:      #0a0a0a;
-  --color-oner-card:         #111111;
-  --color-oner-border:       #1c1c1c;
-  --color-oner-accent:       #00d4a4;
-  --color-oner-accent-dim:   rgba(0,212,164,0.10);
-  --color-oner-accent-glow:  rgba(0,212,164,0.20);
-  --color-oner-green:        #00ff88;
-  --color-oner-blue:         #0ea5e9;
-  --color-oner-amber:        #f59e0b;
-  --color-oner-red:          #ef4444;
-  --color-oner-muted:        #555555;
-  --color-oner-text:         #f5f5f5;
-  --color-oner-text-dim:     #8a8a8a;
+  --color-oner-bg: #080A09;
+  --color-oner-surface: #0E1110;
+  --color-oner-surface-hover: #121615;
+  --color-oner-surface-elevated: #141817;
+  --color-oner-border: #242A27;
+  --color-oner-border-subtle: #181E1C;
+  
+  --color-oner-accent: #A8C83A;
+  --color-oner-healthy: #10B981;
+  --color-oner-amber: #D97706;
+  --color-oner-red: #DC2626;
+  --color-oner-teal: #0D9488;
+  --color-oner-blue: #0284C7;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-
-  --animate-fade-in:    fadeIn 0.3s ease-out;
-  --animate-slide-up:   slideUp 0.25s ease-out;
-  --animate-glow:       glow 2s ease-in-out infinite alternate;
-  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* ═══════════════════════════════════════════════════════
-   KEYFRAMES
-═══════════════════════════════════════════════════════ */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+* {
+  box-sizing: border-box;
 }
-@keyframes slideUp {
-  from { transform: translateY(8px); opacity: 0; }
-  to   { transform: translateY(0);   opacity: 1; }
-}
-@keyframes glow {
-  0%   { box-shadow: 0 0 5px rgba(0,212,164,0.2); }
-  100% { box-shadow: 0 0 20px rgba(0,212,164,0.5), 0 0 40px rgba(0,212,164,0.1); }
-}
-@keyframes statusPulse {
-  0%, 100% { opacity: 1;   transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.8); }
-}
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-6px); }
-}
-
-/* ═══════════════════════════════════════════════════════
-   BASE
-═══════════════════════════════════════════════════════ */
-* { box-sizing: border-box; }
 
 html, body {
-  background-color: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
+  background-color: var(--oner-bg);
+  color: var(--oner-text);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   margin: 0;
   padding: 0;
-  /* cursor hidden on desktop — custom cursor handles it */
-  cursor: none;
 }
 
-/* Restore cursor on touch / small screens */
-@media (max-width: 900px), (hover: none), (pointer: coarse) {
-  html, body { cursor: auto; }
-}
-
-/* Reduced motion — disable all decorative transitions */
+/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
 
-/* Text selection */
-::selection {
-  background: var(--lime);
-  color: #050505;
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #090c0a;
+}
+::-webkit-scrollbar-thumb {
+  background: #18221c;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #25332b;
 }
 
-/* ═══════════════════════════════════════════════════════
-   SCROLLBAR
-═══════════════════════════════════════════════════════ */
-::-webkit-scrollbar         { width: 5px; height: 5px; }
-::-webkit-scrollbar-track   { background: var(--bg); }
-::-webkit-scrollbar-thumb   { background: #1c1c1c; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(230,255,63,0.3); }
-
-/* ═══════════════════════════════════════════════════════
-   GLASS / UTILITY
-═══════════════════════════════════════════════════════ */
-.glass {
-  background: rgba(10,10,10,0.85);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--line);
-}
-
-/* Static grid removed — living canvas replaces it */
-.grid-bg {
-  /* intentionally empty — canvas handles grid */
-}
-
-/* ═══════════════════════════════════════════════════════
-   ANIMATIONS (utility classes)
-═══════════════════════════════════════════════════════ */
-.animate-fade-in  { animation: fadeIn  0.3s ease-out; }
-.animate-slide-up { animation: slideUp 0.25s ease-out; }
-.animate-glow     { animation: glow    2s ease-in-out infinite alternate; }
-.status-pulse     { animation: statusPulse 2.5s ease-in-out infinite; }
-
-/* ═══════════════════════════════════════════════════════
-   PANEL / CARD SHARED BASE
-   Proximity illumination driven by CSS vars set by JS
-═══════════════════════════════════════════════════════ */
-.oner-panel {
-  position: relative;
-  background: var(--panel);
-  border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  overflow: hidden;
-  transition: background 0.3s ease, border-color 0.3s ease;
-}
-
-/* Pseudo-element gradient driven by --px, --py, --strength set from JS */
-.prox-card {
-  --px: 50%;
-  --py: 50%;
-  --strength: 0;
-}
-.prox-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: radial-gradient(
-    220px circle at var(--px) var(--py),
-    rgba(230,255,63,calc(var(--strength) * 0.09)),
-    transparent 70%
-  );
-  z-index: 0;
-}
-.prox-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  border: 1px solid rgba(230,255,63,calc(var(--strength) * 0.30));
-  z-index: 0;
-}
-
-/* ═══════════════════════════════════════════════════════
-   RECHARTS
-═══════════════════════════════════════════════════════ */
-.recharts-tooltip-wrapper { outline: none !important; }
-
-/* ═══════════════════════════════════════════════════════
-   LEGACY ONER CARD (backward compat)
-═══════════════════════════════════════════════════════ */
-.oner-card {
-  background: var(--panel);
-  border: 1px solid var(--line);
+/* Composed Control Surface Utilities */
+.control-surface {
+  background-color: #0e1310;
+  border: 1px solid #16201a;
   border-radius: 0.75rem;
 }
 
-/* ═══════════════════════════════════════════════════════
-   CUSTOM CURSOR
-═══════════════════════════════════════════════════════ */
-#oner-cursor {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--lime-core);
-  box-shadow: 0 0 6px 2px rgba(230,255,63,0.75);
-  pointer-events: none;
-  z-index: 9999;
-  transform: translate(-50%, -50%);
-  transition: opacity 0.25s ease;
+.control-surface-subtle {
+  background-color: #0c100e;
+  border: 1px solid #141c16;
 }
 
-@media (max-width: 900px), (hover: none), (pointer: coarse) {
-  #oner-cursor { display: none; }
+.control-surface-elevated {
+  background-color: #121814;
+  border: 1px solid #1c2720;
 }
 
-/* ═══════════════════════════════════════════════════════
-   LIVING CANVAS
-═══════════════════════════════════════════════════════ */
-#oner-living-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  pointer-events: none;
-  z-index: 2;
+/* Atmospheric intelligence highlight */
+.intelligence-plane {
+  background: linear-gradient(135deg, rgba(16, 24, 19, 0.95) 0%, rgba(13, 19, 16, 0.95) 100%);
+  border: 1px solid #1f2c24;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
 }
 
-/* ═══════════════════════════════════════════════════════
-   NOISE LAYER
-═══════════════════════════════════════════════════════ */
-#oner-noise {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.03;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+/* Recharts override for ultra-clean tooltips */
+.recharts-default-tooltip {
+  background-color: #0e1310 !important;
+  border: 1px solid #202c24 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
+  padding: 8px 12px !important;
 }
 
-/* ═══════════════════════════════════════════════════════
-   NAVIGATION PROXIMITY (set via JS)
-═══════════════════════════════════════════════════════ */
-.nav-prox-item {
-  --strength: 0;
-}
-.nav-prox-item:not(.active):not([data-active="true"]) {
-  background: rgba(230,255,63,calc(var(--strength) * 0.05));
-  border-color: rgba(230,255,63,calc(var(--strength) * 0.20)) !important;
+.recharts-tooltip-item {
+  color: #e4e7e5 !important;
+  font-size: 11px !important;
+  font-family: 'JetBrains Mono', monospace !important;
 }
 
-/* ═══════════════════════════════════════════════════════
-   HEADING FONT for page h1
-═══════════════════════════════════════════════════════ */
-h1 {
-  font-family: var(--font-display);
-  letter-spacing: -0.01em;
+.recharts-cartesian-grid line {
+  stroke: #141c17 !important;
+}
+
+/* Hide next.js dev overlay indicator badge */
+[data-nextjs-toast], [data-next-dev-indicator], #nextjs-dev-indicator {
+  display: none !important;
 }
