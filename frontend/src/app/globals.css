@@ -137,6 +137,50 @@ html, body {
   stroke: #141c17 !important;
 }
 
+/* Simulated Data Hatch Pattern (so simulated data is never mistaken for verified) */
+.pattern-simulated-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(168, 200, 58, 0.06),
+    rgba(168, 200, 58, 0.06) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+.pattern-simulated-amber-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(217, 119, 6, 0.08),
+    rgba(217, 119, 6, 0.08) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+.pattern-simulated-neutral-hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(146, 154, 149, 0.05),
+    rgba(146, 154, 149, 0.05) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+/* Hairline divider */
+.hairline-divider {
+  height: 1px;
+  background-color: var(--oner-border);
+  width: 100%;
+}
+
+.hairline-divider-v {
+  width: 1px;
+  background-color: var(--oner-border);
+  align-self: stretch;
+}
+
 /* Hide next.js dev overlay indicator badge */
 [data-nextjs-toast], [data-next-dev-indicator], #nextjs-dev-indicator {
   display: none !important;

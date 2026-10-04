@@ -103,75 +103,112 @@ export default function SimulatorPage() {
         <div className="p-6 rounded-xl bg-[#0E1110] border border-[#242A27]">
           <div className="flex items-center justify-between flex-wrap gap-4 mb-5">
             <div>
-              <div className="text-[10px] font-mono text-[#A8C83A] uppercase font-bold tracking-wider">
-                COUNTERFACTUAL DECISION MODEL &bull; THERMODYNAMIC SIMULATION
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-[#A8C83A] uppercase font-bold tracking-wider">
+                  INDUSTRIAL DECISION INSTRUMENT
+                </span>
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#141817] text-amber-300 border border-amber-500/30 pattern-simulated-amber-hatch">
+                  SIMULATED · NOT YET MEASURED
+                </span>
               </div>
               <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#F1F3EE] mt-0.5">
-                Physical Intervention Benchmarking
+                Physical Intervention Benchmarking & Counterfactuals
               </h1>
             </div>
 
             <div className="flex items-center gap-2 text-xs text-[#929A95]">
-              <span>Selected Interventions:</span>
+              <span>Selected Setpoint:</span>
               <span className="px-2.5 py-1 rounded bg-[#141817] text-[#A8C83A] font-bold border border-[#A8C83A]/30 font-mono text-[11px]">
-                {portfolio.activeCount} OF {scenarios.length} ACTIVE
+                DAMPER TRIM 1.042 (RECOMMENDED)
               </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Card 1: CURRENT BASELINE */}
-            <div className="p-5 rounded-lg bg-[#080A09] border border-[#242A27] flex flex-col justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+            {/* 1. DO NOTHING */}
+            <div className="p-5 rounded-lg bg-[#080A09] border border-red-900/30 space-y-4 flex flex-col justify-between">
               <div>
-                <div className="text-[10px] uppercase font-bold text-[#929A95] tracking-wider">
-                  1. BASELINE STATE
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-[10px] uppercase font-bold text-red-400 font-mono">
+                    COUNTERFACTUAL · DO NOTHING
+                  </span>
+                  <span className="text-[9px] font-mono text-red-400 bg-red-950/30 px-2 py-0.5 rounded border border-red-900/40">
+                    CONTINUED BREACH
+                  </span>
                 </div>
-                <div className="text-2xl font-bold font-mono text-zinc-100 mt-2">
-                  18.2 <span className="text-xs font-normal text-zinc-400">t CO₂ / day</span>
+                <div className="text-3xl font-bold font-mono text-red-400 mt-2">
+                  +31.4% <span className="text-xs font-normal text-red-400/80">NOx Excess</span>
                 </div>
-                <p className="text-xs text-[#929A95] mt-2 leading-relaxed font-sans">
-                  Operating with detected combustion drift in Furnace F-101 and unmitigated peak-tariff electrical demand.
+                <div className="text-xs font-mono text-zinc-400 mt-1">
+                  Stack Concentration: 131.4 mg/Nm³ (Threshold: 100.0 mg)
+                </div>
+                <p className="text-xs text-[#929A95] mt-3 leading-relaxed font-sans">
+                  Refractory degradation accelerates burner plenum imbalance. Flue gas temperature
+                  remains at +18.4°C over threshold. Cumulative unmitigated drift creates $184,000/yr
+                  excess fuel burn plus regulatory penalty risk under State Environmental Pact.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#181E1C] text-[10px] font-mono text-[#626A65]">
-                CAPEX: $0 &bull; OPEX Drift: High
+
+              <div className="p-3 rounded bg-[#0E1110] border border-red-900/20 text-xs font-mono space-y-1">
+                <div className="flex justify-between text-[#929A95]">
+                  <span>Daily CO₂ Rate:</span>
+                  <span className="text-red-400 font-bold">104.2 tCO₂e / day</span>
+                </div>
+                <div className="flex justify-between text-[#929A95]">
+                  <span>Thermal Efficiency:</span>
+                  <span className="text-red-400 font-bold">-2.45% Lost</span>
+                </div>
               </div>
             </div>
 
-            {/* Card 2: DO NOTHING */}
-            <div className="p-5 rounded-lg bg-[#080A09] border border-red-500/25 flex flex-col justify-between">
+            {/* 2. ONER INTERVENTION (DOMINANT DELTA) */}
+            <div className="p-5 rounded-lg bg-[#141817] border border-[#A8C83A]/50 space-y-4 flex flex-col justify-between pattern-simulated-hatch">
               <div>
-                <div className="text-[10px] uppercase font-bold text-red-400 tracking-wider">
-                  2. COUNTERFACTUAL: DO NOTHING
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-[10px] uppercase font-bold text-[#A8C83A] font-mono">
+                    RECOMMENDED · DAMPER TRIM 1.042
+                  </span>
+                  <span className="text-[9px] font-mono text-[#A8C83A] bg-[#0E1110] px-2 py-0.5 rounded border border-[#A8C83A]/40">
+                    TARGET NORMALIZATION
+                  </span>
                 </div>
-                <div className="text-2xl font-bold font-mono text-red-400 mt-2">
-                  +14.2% <span className="text-xs font-normal text-red-400/80">Drift Surge</span>
-                </div>
-                <p className="text-xs text-[#929A95] mt-2 leading-relaxed font-sans">
-                  Refractory degradation accelerates burner imbalance. Annual emissions increase by +320 t CO₂ with regulatory penalty exposure.
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-[#181E1C] text-[10px] font-mono text-red-400">
-                Cumulative Waste Cost: +$184,000 / yr
-              </div>
-            </div>
 
-            {/* Card 3: ONER INTERVENTION */}
-            <div className="p-5 rounded-lg bg-[#141817] border border-[#A8C83A]/40 flex flex-col justify-between">
-              <div>
-                <div className="text-[10px] uppercase font-bold text-[#A8C83A] tracking-wider">
-                  3. ONER INTERVENTION PORTFOLIO
+                {/* Primary Dominant Delta */}
+                <div className="mt-2 flex items-baseline gap-3">
+                  <span className="text-4xl font-extrabold font-mono text-[#A8C83A]">
+                    -14.2
+                  </span>
+                  <div className="text-left font-mono">
+                    <div className="text-sm font-bold text-[#F1F3EE]">tCO₂e / day</div>
+                    <div className="text-[10px] text-[#A8C83A]">5,183 tCO₂e / year abatement</div>
+                  </div>
                 </div>
-                <div className="text-2xl font-bold font-mono text-[#A8C83A] mt-2">
-                  -{portfolio.totalCO2Cut} <span className="text-xs font-normal text-zinc-400">t CO₂e / yr</span>
+
+                {/* Secondary Delta: NOx Criteria Pollutant */}
+                <div className="mt-3 p-3 rounded bg-[#080A09]/90 border border-[#242A27] grid grid-cols-3 gap-2 text-xs font-mono">
+                  <div>
+                    <div className="text-[9px] text-[#626A65] uppercase">NOx Cut</div>
+                    <div className="text-sm font-bold text-[#C4DF61]">-28.6 kg/d</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-[#626A65] uppercase">Fuel Recovery</div>
+                    <div className="text-sm font-bold text-[#F1F3EE]">+2.45%</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] text-[#626A65] uppercase">Payback</div>
+                    <div className="text-sm font-bold text-[#A8C83A]">&lt; 0.3 yrs</div>
+                  </div>
                 </div>
-                <p className="text-xs text-zinc-300 mt-2 leading-relaxed font-sans">
-                  Executing selected closed-loop interventions captures ${portfolio.totalSavingsUSD}/yr in energy and fuel cost abatement.
+
+                <p className="text-xs text-[#929A95] mt-3 leading-relaxed font-sans">
+                  Automated air-fuel stoichiometric loop trim reset (Damper trim 1.042). Re-establishes
+                  optimal burner flame envelope, dropping flue exit concentration to 88.5 mg/Nm³ (compliant).
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#242A27] text-[10px] font-mono text-zinc-300 flex items-center justify-between">
-                <span>Capex: ${portfolio.totalCostUSD}</span>
-                <span className="text-[#A8C83A] font-bold">Payback: {portfolio.paybackYears} yrs</span>
+
+              <div className="p-3 rounded bg-[#0E1110] border border-[#242A27] text-xs font-mono flex items-center justify-between">
+                <span className="text-[#929A95]">Annual Fuel Savings: $142,000</span>
+                <span className="text-[#A8C83A] font-bold">MRV Ready: Yes</span>
               </div>
             </div>
           </div>

@@ -52,7 +52,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: 'INDUSTRY',
     items: [
       { href: '/industry', label: 'Facility Operations', icon: Factory },
-      { href: '/industry#pact', label: 'Environmental Pact', icon: ShieldCheck },
+      { href: '/government/pact', label: 'Environmental Pact', icon: ShieldCheck },
       { href: '/carbon', label: 'Carbon & MRV', icon: FileCheck2 },
     ],
   },
@@ -65,7 +65,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'AI',
     items: [
-      { href: '/copilot', label: 'Ask ONER', icon: Sparkles },
+      { href: '/ask', label: 'Ask ONER', icon: Sparkles },
     ],
   },
   {

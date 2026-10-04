@@ -23,6 +23,7 @@ import { api, CommunityReport, EnvironmentalPact } from '@/lib/api';
 import EnvironmentalImpactReport from '@/components/EnvironmentalImpactReport';
 import EnvironmentalImpactReportModal from '@/components/EnvironmentalImpactReportModal';
 import EvidenceTrustLayer from '@/components/EvidenceTrustLayer';
+import { Rail } from '@/components/primitives';
 
 function IndustryPortalContent() {
   const searchParams = useSearchParams();
@@ -308,17 +309,38 @@ function IndustryPortalContent() {
                 <div className="p-4 rounded-lg bg-[#080A09] border border-[#242A27] space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                        Engineering Response
+                      <div className="text-xs font-bold uppercase tracking-wider text-[#F1F3EE]">
+                        Engineering Response Rail
                       </div>
                       <div className="text-[10px] text-[#929A95]">
-                        Recommended Action: <strong className="text-zinc-200">{selectedCase.recommended_action}</strong>
+                        Recommended Action: <strong className="text-[#F1F3EE]">{selectedCase.recommended_action}</strong>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141817] text-zinc-300 border border-[#242A27]">
-                      STATUS: {selectedCase.industry_response.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/case/${selectedCase.id}?level=control`}
+                        className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/30 hover:underline"
+                      >
+                        Open Case Dossier →
+                      </Link>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141817] text-[#929A95] border border-[#242A27]">
+                        STATUS: {selectedCase.industry_response.status}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* 6-Step Action Rail: Acknowledge → Investigate → Simulate → Apply → Verify → Resolve */}
+                  <Rail
+                    steps={[
+                      { id: 'ack', label: 'Acknowledge', sublabel: 'Received', status: 'complete', value: 'T+0s' },
+                      { id: 'inv', label: 'Investigate', sublabel: 'Root Cause', status: 'complete', value: '99.4%' },
+                      { id: 'sim', label: 'Simulate', sublabel: 'Trim 1.042', status: simulationActive ? 'active' : 'complete', value: '-14.2 t/d' },
+                      { id: 'act', label: 'Apply', sublabel: isResolved ? 'Applied' : 'DCS Setpoint', status: isResolved ? 'complete' : 'active', value: 'Trim 1.042' },
+                      { id: 'ver', label: 'Verify', sublabel: 'CEMS MRV', status: isResolved ? 'complete' : 'pending', value: '5,183 t/yr' },
+                      { id: 'res', label: 'Resolve', sublabel: 'Citizen Notified', status: isResolved ? 'complete' : 'pending', value: '+50 pts' },
+                    ]}
+                    currentStepId={isResolved ? 'ver' : simulationActive ? 'sim' : 'act'}
+                  />
 
                   {/* Simulation Toggle */}
                   {simulationActive && (

@@ -34,6 +34,7 @@ import {
 import EnvironmentalImpactReportModal from '@/components/EnvironmentalImpactReportModal';
 import ScoreDefinitions from '@/components/ScoreDefinitions';
 import EvidenceTrustLayer from '@/components/EvidenceTrustLayer';
+import { ConvergenceChain, StateBadge, Horizon } from '@/components/primitives';
 
 export default function OverviewPage() {
   const [overview, setOverview] = useState<any>(null);
@@ -100,22 +101,63 @@ export default function OverviewPage() {
           </div>
         )}
 
+        {/* ── 0. HOME HERO STATEMENT & DEFINITION (Phase 2) ────────── */}
+        <div className="p-6 rounded-lg bg-[#0E1110] border border-[#242A27] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1.5 max-w-3xl">
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#A8C83A]" />
+              <span className="text-[10px] font-mono tracking-widest text-[#A8C83A] uppercase font-bold">
+                COMMUNITY-TO-INDUSTRY ACCOUNTABILITY NETWORK
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141817] text-[#929A95] border border-[#242A27]">
+                DEMO DATA · SIMULATED TELEMETRY
+              </span>
+            </div>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#F1F3EE]">
+              A community report becomes verified environmental action.
+            </h1>
+            <p className="text-xs text-[#929A95] font-sans leading-relaxed">
+              ONER turns community pollution reports into evidence-backed environmental action.
+              Six independent evidence strands fuse with industrial telemetry to identify root cause,
+              trigger engineering intervention, and verify environmental abatement under ISO 14064 MRV standards.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/case/COMM-2026-00421"
+              className="px-3.5 py-2 rounded bg-[#141817] hover:bg-[#1D2320] border border-[#A8C83A]/60 text-xs font-mono font-bold text-[#A8C83A] hover:text-[#C4DF61] transition-all flex items-center gap-1.5"
+            >
+              <span>INSPECT SEEDED CASE</span>
+              <ArrowRight size={13} />
+            </Link>
+          </div>
+        </div>
+
+        {/* ── PRIMARY VISUAL: THE CONVERGENCE CHAIN ─────────────── */}
+        <ConvergenceChain
+          caseId="COMM-2026-00421"
+          corroborationScore={89.4}
+          anomalyScore={0.884}
+          rootCauseConfidence={99.4}
+        />
+
         {/* ── 1. ENTERPRISE HEADER STRIP (Section 7) ───────────── */}
-        <div className="p-5 rounded-xl bg-[#0E1110] border border-[#242A27] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="p-5 rounded-lg bg-[#0E1110] border border-[#242A27] flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono tracking-widest text-[#A8C83A] uppercase font-bold">
-                ONER &bull; ENVIRONMENTAL INTELLIGENCE
+                ONER • ENVIRONMENTAL INTELLIGENCE
               </span>
-              <span className="text-zinc-600 font-mono">&bull;</span>
+              <span className="text-[#626A65] font-mono">•</span>
               <span className="text-[10px] font-mono text-[#929A95]">
-                COMMUNITY-TO-INDUSTRY ACCOUNTABILITY NETWORK
+                FACILITY CONTROL DESK
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#F1F3EE]">
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[#F1F3EE]">
                 Orion Refining Complex
-              </h1>
+              </h2>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold">
                 STATUS: OPERATIONAL / AT RISK
               </span>
@@ -126,7 +168,7 @@ export default function OverviewPage() {
             <ScoreDefinitions variant="button-modal" />
             <Link
               href="/report"
-              className="px-3.5 py-1.5 rounded-lg bg-[#141817] hover:bg-[#1a221e] border border-[#A8C83A]/50 text-xs font-mono font-bold text-[#A8C83A] transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded bg-[#141817] hover:bg-[#1a221e] border border-[#A8C83A]/50 text-xs font-mono font-bold text-[#A8C83A] transition-colors flex items-center gap-1.5"
             >
               <span>+ FILE CITIZEN REPORT</span>
             </Link>
@@ -136,7 +178,7 @@ export default function OverviewPage() {
         {/* ── 2. MAIN KPI & AUTONOMOUS BRIEFING (Section 7) ────── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
           {/* Main KPI: ENVIRONMENTAL HEALTH 87.3 */}
-          <div className="lg:col-span-4 p-6 rounded-xl bg-[#0E1110] border border-[#242A27] flex flex-col justify-between">
+          <div className="lg:col-span-4 p-6 rounded-lg bg-[#0E1110] border border-[#242A27] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-xs font-semibold tracking-tight text-[#929A95] uppercase">
@@ -496,18 +538,24 @@ export default function OverviewPage() {
                     </div>
 
                     <div className="shrink-0 flex items-center gap-2">
+                      <Link
+                        href={`/case/${rep.id}`}
+                        className="px-2.5 py-1.5 rounded bg-[#141817] hover:bg-[#1f2622] border border-[#242A27] text-[11px] font-mono text-[#F1F3EE] hover:text-[#A8C83A] transition-colors"
+                      >
+                        Case
+                      </Link>
                       {rep.environmental_impact_report ? (
                         <button
                           type="button"
                           onClick={() => setSelectedImpactReport(rep.environmental_impact_report || null)}
                           className="px-2.5 py-1.5 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#A8C83A]/40 text-[11px] font-mono text-[#A8C83A] font-semibold transition-colors cursor-pointer"
                         >
-                          Impact Report
+                          MRV Audit
                         </button>
                       ) : (
                         <Link
                           href={`/industry?case=${rep.id}`}
-                          className="px-2.5 py-1.5 rounded bg-[#141817] hover:bg-[#1f2622] border border-[#242A27] text-[11px] font-mono text-zinc-300 transition-colors"
+                          className="px-2.5 py-1.5 rounded bg-[#141817] hover:bg-[#1f2622] border border-[#242A27] text-[11px] font-mono text-[#929A95] transition-colors"
                         >
                           Inspect
                         </Link>

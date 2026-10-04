@@ -297,17 +297,27 @@ export default function CommunityPage() {
                       </div>
                     </div>
 
-                    {/* VIEW ENVIRONMENTAL IMPACT REPORT BUTTON (Section 23) */}
-                    {selectedReport.environmental_impact_report && (
-                      <button
-                        type="button"
-                        onClick={() => setShowImpactModal(true)}
-                        className="px-4 py-2 rounded-lg bg-[#141817] hover:bg-[#1a221e] border border-[#A8C83A]/50 text-xs font-mono font-bold text-[#A8C83A] flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-colors"
+                    {/* ACTIONS: OPEN CASE DOSSIER & VIEW ENVIRONMENTAL IMPACT REPORT */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link
+                        href={`/case/${selectedReport.id}?level=field`}
+                        className="px-3.5 py-2 rounded bg-[#080A09] hover:bg-[#141817] border border-[#242A27] text-xs font-mono text-[#F1F3EE] hover:text-[#A8C83A] flex items-center gap-1.5 transition-colors"
                       >
-                        <FileCheck2 size={14} />
-                        <span>VIEW ENVIRONMENTAL IMPACT REPORT</span>
-                      </button>
-                    )}
+                        <span>OPEN CASE DOSSIER</span>
+                        <ArrowRight size={13} />
+                      </Link>
+
+                      {selectedReport.environmental_impact_report && (
+                        <button
+                          type="button"
+                          onClick={() => setShowImpactModal(true)}
+                          className="px-4 py-2 rounded bg-[#141817] hover:bg-[#1D2320] border border-[#A8C83A]/50 text-xs font-mono font-bold text-[#A8C83A] flex items-center gap-1.5 whitespace-nowrap cursor-pointer transition-colors"
+                        >
+                          <FileCheck2 size={14} />
+                          <span>VIEW IMPACT REPORT</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 

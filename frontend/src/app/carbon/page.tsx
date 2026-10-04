@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import EnvironmentalImpactReport from '@/components/EnvironmentalImpactReport';
 import EnvironmentalImpactReportModal from '@/components/EnvironmentalImpactReportModal';
+import { ReductionWedge } from '@/components/primitives';
 
 export default function CarbonPage() {
   const [data, setData] = useState<any>(null);
@@ -180,6 +181,17 @@ export default function CarbonPage() {
             </div>
           </div>
         </div>
+
+        {/* ── HERO REDUCTION WEDGE PRIMITIVE ────────────────────── */}
+        <ReductionWedge
+          dailyReductionTons={14.2}
+          annualizedReductionTons={5183}
+          noxDailyReductionKg={28.6}
+          facilityName="Orion Refining Complex"
+          sourceName="Furnace F-101 (North Processing Train)"
+          interventionName="Damper Trim 1.042 (Air-Fuel Ratio Reset)"
+          isVerified={true}
+        />
 
         {/* ── MANDATORY CARBON CREDIT LANGUAGE (Section 11) ─────── */}
         <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] text-xs flex items-start gap-2.5">

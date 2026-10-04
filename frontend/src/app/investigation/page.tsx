@@ -224,65 +224,143 @@ function InvestigationContent() {
                 </div>
               </div>
 
-              {/* ── EXPLAINABLE METRICS STRIP (Sections 15, 16, 17) ── */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                {/* 1. ANOMALY SCORE (Section 16) */}
-                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-mono font-bold text-amber-400">
-                      ANOMALY SCORE: 0.884
-                    </span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-semibold">
-                      HIGH DEVIATION
-                    </span>
-                  </div>
-                  <div className="text-[10px] font-mono text-zinc-400">MODEL: Isolation Forest (200 Trees)</div>
-                  <p className="text-[11px] text-[#929A95] leading-relaxed">
-                    This score indicates how unusual the operating condition is relative to learned normal operating patterns. (Not a subjective probability of pollution).
-                  </p>
+              {/* ── EXPLAINABLE SCORE CLASSIFICATION STRIP ──────────── */}
+              <div className="p-4 rounded-lg bg-[#080A09] border border-[#242A27] space-y-3">
+                <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#626A65]">
+                  <span>SCORE TAXONOMY CLASSIFICATION</span>
+                  <span>PRECISE · NON-PROBABILISTIC</span>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono">
+                  <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27]">
+                    <div className="text-[9px] uppercase font-sans text-[#626A65]">1. MODEL SCORE</div>
+                    <div className="text-base font-bold text-amber-400 mt-0.5">0.884</div>
+                    <div className="text-[10px] text-[#929A95] font-sans">Isolation Forest Multi-Dimensional Deviation</div>
+                  </div>
 
-                {/* 2. ROOT-CAUSE CONFIDENCE (Section 17) */}
-                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-mono font-bold text-emerald-400">
-                      ROOT-CAUSE CONFIDENCE: 99.4%
-                    </span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
-                      VERIFIED
-                    </span>
+                  <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27]">
+                    <div className="text-[9px] uppercase font-sans text-[#626A65]">2. EVIDENCE SCORE</div>
+                    <div className="text-base font-bold text-[#A8C83A] mt-0.5">89.4%</div>
+                    <div className="text-[10px] text-[#929A95] font-sans">Multi-Source Independent Signal Corroboration</div>
                   </div>
-                  <div className="text-[11px] text-zinc-200 font-semibold">
-                    Primary: {detail.root_cause}
+
+                  <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27]">
+                    <div className="text-[9px] uppercase font-sans text-[#626A65]">3. BUSINESS KPI</div>
+                    <div className="text-base font-bold text-[#F1F3EE] mt-0.5">87.3 / 100</div>
+                    <div className="text-[10px] text-[#929A95] font-sans">Facility Environmental Health Index</div>
                   </div>
-                  <p className="text-[11px] text-[#929A95] leading-relaxed">
-                    Strength of physical evidence supporting the identified contributing cause across combustion stoichiometry, stack temperature, and optical density.
-                  </p>
                 </div>
               </div>
 
-              {/* Contributing Signals Checklist (Section 17) */}
-              <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-2 text-xs">
-                <div className="text-[10px] uppercase font-sans font-bold text-zinc-400">
-                  Contributing Physical Signals:
+              {/* ── ANSWER-FIRST 5-QUESTION PROTOCOL ────────────────── */}
+              <div className="space-y-3 pt-1">
+                <div className="text-xs font-bold uppercase tracking-wider text-[#F1F3EE]">
+                  Answer-First Investigation Protocol
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-[11px]">
-                  <div className="p-2 rounded bg-[#0E1110] border border-[#181E1C]">
-                    <div className="text-[9px] font-sans text-zinc-500">1. Temperature Drift</div>
-                    <div className="text-amber-400 font-bold mt-0.5">+18.4°C Excess</div>
+
+                {/* Question 1: What was unusual? */}
+                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold text-amber-400 uppercase">
+                      QUESTION 1 · WHAT WAS UNUSUAL?
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+                      HIGH DEVIATION
+                    </span>
                   </div>
-                  <div className="p-2 rounded bg-[#0E1110] border border-[#181E1C]">
-                    <div className="text-[9px] font-sans text-zinc-500">2. Fuel Behavior</div>
-                    <div className="text-zinc-200 font-bold mt-0.5">Air-Fuel ratio 0.94</div>
+                  <div className="grid grid-cols-3 gap-2 font-mono text-xs pt-1">
+                    <div className="p-2 rounded bg-[#0E1110] border border-[#242A27]">
+                      <div className="text-[9px] text-[#626A65] font-sans">NOx Concentration</div>
+                      <div className="text-red-400 font-bold mt-0.5">+31.4% (131.4 mg)</div>
+                    </div>
+                    <div className="p-2 rounded bg-[#0E1110] border border-[#242A27]">
+                      <div className="text-[9px] text-[#626A65] font-sans">Flue Gas Temperature</div>
+                      <div className="text-amber-400 font-bold mt-0.5">+18.4°C Excess</div>
+                    </div>
+                    <div className="p-2 rounded bg-[#0E1110] border border-[#242A27]">
+                      <div className="text-[9px] text-[#626A65] font-sans">Anomaly Magnitude</div>
+                      <div className="text-[#F1F3EE] font-bold mt-0.5">0.884 (Isolation Forest)</div>
+                    </div>
                   </div>
-                  <div className="p-2 rounded bg-[#0E1110] border border-[#181E1C]">
-                    <div className="text-[9px] font-sans text-zinc-500">3. NOx Increase</div>
-                    <div className="text-red-400 font-bold mt-0.5">131.4 mg (+31.4%)</div>
+                </div>
+
+                {/* Question 2: Is the observation supported? */}
+                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold text-[#A8C83A] uppercase">
+                      QUESTION 2 · IS THE OBSERVATION SUPPORTED?
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/30">
+                      89.4% CORROBORATED
+                    </span>
                   </div>
-                  <div className="p-2 rounded bg-[#0E1110] border border-[#181E1C]">
-                    <div className="text-[9px] font-sans text-zinc-500">4. Efficiency Drop</div>
-                    <div className="text-amber-300 font-bold mt-0.5">-2.45% Thermal</div>
+                  <p className="text-xs text-[#929A95] leading-relaxed">
+                    Yes. Community observation COMM-2026-00421 is corroborated with an 89.4% evidence
+                    fusion score. Independent validation confirmed via stack CEMS optical density,
+                    flue pyrometry, consensual GPS perimeter proximity (0.42 km), and ambient fence monitoring.
+                  </p>
+                </div>
+
+                {/* Question 3: How did ONER reason? (Reasoning Trace) */}
+                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-2">
+                  <div className="text-[10px] font-mono font-bold text-[#929A95] uppercase">
+                    QUESTION 3 · HOW DID ONER REASON? (REASONING TRACE)
                   </div>
+                  <div className="relative pl-3 space-y-2 before:absolute before:left-1 before:top-2 before:bottom-2 before:w-[1px] before:bg-[#242A27] text-xs font-mono">
+                    <div className="text-[#929A95]">
+                      <span className="text-[#A8C83A]">T+0s:</span> Citizen photo uploaded with consensual GPS at boundary perimeter.
+                    </div>
+                    <div className="text-[#929A95]">
+                      <span className="text-[#A8C83A]">T+4s:</span> Telemetry ingest: Downwind PM2.5 spike (+117%) matched wind vector 240° SW.
+                    </div>
+                    <div className="text-[#929A95]">
+                      <span className="text-[#A8C83A]">T+12s:</span> Optical CEMS stack scan detects opacity anomaly (0.884 Isolation Forest score).
+                    </div>
+                    <div className="text-[#929A95]">
+                      <span className="text-[#A8C83A]">T+28s:</span> Causal traversal eliminates compressor surge; confirms fuel-rich trim (0.94) on Burner Plenum 4B.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Question 4: Likely cause? */}
+                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold text-[#C4DF61] uppercase">
+                      QUESTION 4 · LIKELY CAUSE?
+                    </span>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#141817] text-[#C4DF61] border border-[#C4DF61]/30">
+                      SUPPORT: 99.4%
+                    </span>
+                  </div>
+                  <div className="text-sm font-semibold text-[#F1F3EE]">
+                    Burner Refractory Fouling / Thermal Efficiency Degradation
+                  </div>
+                  <p className="text-xs text-[#929A95] leading-relaxed">
+                    Combustion instability in Furnace F-101 North Processing Train burner plenum 4B.
+                    Refractory accumulation degraded burner aerodynamics, inducing fuel-rich pockets and unburnt carbon plume.
+                  </p>
+                </div>
+
+                {/* Question 5: What should we do? */}
+                <div className="p-4 rounded-lg bg-[#141817] border border-[#A8C83A]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div>
+                    <div className="text-[10px] font-mono font-bold text-[#A8C83A] uppercase">
+                      QUESTION 5 · WHAT SHOULD WE DO?
+                    </div>
+                    <div className="text-sm font-semibold text-[#F1F3EE] mt-0.5">
+                      Recalibrate Damper Trim to <strong className="text-[#A8C83A]">1.042</strong>
+                    </div>
+                    <div className="text-[11px] text-[#929A95] mt-0.5">
+                      Trims excess fuel ratio by 4.2%; expected abatement: -14.2 tCO₂e/day (-28.6 kg NOx/day).
+                    </div>
+                  </div>
+
+                  <Link
+                    href="/simulator"
+                    className="px-3.5 py-2 rounded bg-[#080A09] hover:bg-[#1D2320] border border-[#A8C83A]/60 text-xs font-mono font-bold text-[#A8C83A] hover:text-[#C4DF61] transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                  >
+                    <span>SIMULATE SETPOINT</span>
+                    <ArrowRight size={13} />
+                  </Link>
                 </div>
               </div>
 

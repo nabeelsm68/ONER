@@ -264,18 +264,18 @@ export default function ReportPage() {
         {!submittedReport ? (
           /* ── 5-STEP CLEAN REPORTING WORKFLOW (Section 24) ────────── */
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* ── STEP 1: WHAT DID YOU SEE? ────────────────────────── */}
-            <div className="p-5 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-3">
+            {/* ── STEP 1: TELL US WHAT YOU SAW ────────────────────── */}
+            <div className="p-5 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded bg-[#141817] text-[#A8C83A] flex items-center justify-center font-mono text-xs font-bold">
                     1
                   </span>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                    STEP 1: WHAT DID YOU SEE?
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#F1F3EE]">
+                    TELL US WHAT YOU SAW
                   </h2>
                 </div>
-                <span className="text-[10px] font-mono text-[#929A95]">Select Category</span>
+                <span className="text-[10px] font-mono text-[#929A95]">Category</span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -293,12 +293,12 @@ export default function ReportPage() {
                       }}
                       className={`p-3 rounded-lg text-left text-xs transition-all border cursor-pointer ${
                         isSelected
-                          ? 'bg-[#141817] text-white border-[#A8C83A]/60 shadow-sm'
-                          : 'bg-[#080A09] text-zinc-400 hover:text-zinc-200 border-[#242A27]'
+                          ? 'bg-[#141817] text-[#F1F3EE] border-[#A8C83A]/60 shadow-sm'
+                          : 'bg-[#080A09] text-[#929A95] hover:text-[#F1F3EE] border-[#242A27]'
                       }`}
                     >
                       <div className="text-lg mb-1">{cat.icon}</div>
-                      <div className="font-semibold text-zinc-200">{cat.label}</div>
+                      <div className="font-semibold text-[#F1F3EE]">{cat.label}</div>
                     </button>
                   );
                 })}
@@ -306,8 +306,8 @@ export default function ReportPage() {
 
               {/* Observed Severity */}
               <div className="pt-2 flex items-center justify-between flex-wrap gap-2 text-xs">
-                <span className="text-[10px] uppercase font-sans text-zinc-400 font-semibold">
-                  Observed Severity Level:
+                <span className="text-[10px] uppercase font-sans text-[#929A95] font-semibold">
+                  Observed Severity:
                 </span>
                 <div className="flex items-center gap-1.5 font-mono">
                   {(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const).map((sev) => (
@@ -318,7 +318,7 @@ export default function ReportPage() {
                       className={`px-2.5 py-1 rounded text-[10px] font-bold border transition-colors cursor-pointer ${
                         severity === sev
                           ? 'bg-[#141817] text-[#A8C83A] border-[#A8C83A]/50'
-                          : 'bg-[#080A09] text-zinc-500 border-[#242A27]'
+                          : 'bg-[#080A09] text-[#626A65] border-[#242A27]'
                       }`}
                     >
                       {sev}
@@ -328,24 +328,24 @@ export default function ReportPage() {
               </div>
             </div>
 
-            {/* ── STEP 2: ADD PHOTO ─────────────────────────────────── */}
-            <div className="p-5 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-3">
+            {/* ── STEP 2: SHOW US (PHOTO) ───────────────────────────── */}
+            <div className="p-5 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded bg-[#141817] text-[#A8C83A] flex items-center justify-center font-mono text-xs font-bold">
                     2
                   </span>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                    STEP 2: ADD PHOTO & EVIDENCE PREVIEW
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#F1F3EE]">
+                    SHOW US (EVIDENCE COPY WITH CAPTURED METADATA)
                   </h2>
                 </div>
                 <span className="text-[10px] font-mono text-[#A8C83A]">
-                  EVIDENCE QUALITY: {photoQuality}
+                  PHOTO QUALITY: {photoQuality}
                 </span>
               </div>
 
               {/* Preview Window */}
-              <div className="relative aspect-[16/9] max-h-72 rounded-lg bg-[#080A09] border border-[#242A27] overflow-hidden flex items-center justify-center">
+              <div className="relative aspect-[16/9] max-h-72 rounded bg-[#080A09] border border-[#242A27] overflow-hidden flex items-center justify-center">
                 {rawPhotoDataUrl ? (
                   <img
                     src={stampedPhotoDataUrl || rawPhotoDataUrl}
@@ -353,27 +353,27 @@ export default function ReportPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="text-center p-6 text-zinc-500">
-                    <Camera size={28} className="mx-auto mb-1 text-zinc-600" />
-                    <span className="text-xs">No photo captured yet</span>
+                  <div className="text-center p-6 text-[#626A65]">
+                    <Camera size={28} className="mx-auto mb-1 text-[#626A65]" />
+                    <span className="text-xs">Take or upload a photo of the observed condition</span>
                   </div>
                 )}
 
                 {/* Evidence Quality Watermark Banner */}
                 {rawPhotoDataUrl && (
                   <div className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded bg-black/80 border border-[#A8C83A]/40 text-[9px] font-mono text-[#A8C83A]">
-                    EVIDENCE STAMP EMBEDDED
+                    EVIDENCE COPY WITH CAPTURED METADATA
                   </div>
                 )}
               </div>
 
-              {/* Low Quality Photo Notice (Section 14) */}
+              {/* Low Quality Photo Notice */}
               {photoQuality === 'LOW' && (
                 <div className="p-2.5 rounded bg-amber-500/10 border border-amber-500/25 text-[11px] text-amber-300 flex items-start gap-2">
-                  <AlertTriangle size={14} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                  <AlertTriangle size={14} className="text-amber-400 shrink-0 mt-0.5" />
                   <div>
-                    <strong className="text-amber-200 uppercase font-mono text-[10px]">Photo Quality: LOW &bull; Report Accepted: </strong>
-                    Image appears degraded or blurry. Your report continues without penalty. Corroboration will be drawn from GPS coordinates, timestamp, and facility telemetry.
+                    <strong className="text-amber-200 uppercase font-mono text-[10px]">Photo Quality: LOW · Report Accepted: </strong>
+                    Image is blurry or degraded. Report is accepted without rejection. Corroboration will be derived via GPS, time synchronization, and facility CEMS sensor deviations.
                   </div>
                 </div>
               )}
@@ -383,6 +383,7 @@ export default function ReportPage() {
                 <input
                   type="file"
                   accept="image/*"
+                  capture="environment"
                   ref={fileInputRef}
                   onChange={handlePhotoUpload}
                   className="hidden"
@@ -390,32 +391,32 @@ export default function ReportPage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 px-3 py-2 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#242A27] text-xs font-semibold text-zinc-200 transition-colors cursor-pointer"
+                  className="flex items-center gap-2 px-3 py-2 rounded bg-[#141817] hover:bg-[#1C221F] border border-[#242A27] text-xs font-semibold text-[#F1F3EE] transition-colors cursor-pointer"
                 >
                   <Upload size={14} className="text-[#A8C83A]" />
-                  <span>Upload from Device / Camera</span>
+                  <span>Capture Photo / Upload</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setPhotoQuality(photoQuality === 'HIGH' ? 'LOW' : 'HIGH');
                   }}
-                  className="px-3 py-2 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#242A27] text-xs font-mono text-zinc-300 cursor-pointer"
+                  className="px-3 py-2 rounded bg-[#080A09] hover:bg-[#141817] border border-[#242A27] text-xs font-mono text-[#929A95] cursor-pointer"
                 >
-                  Toggle Quality ({photoQuality})
+                  Toggle Quality Flag ({photoQuality})
                 </button>
               </div>
             </div>
 
-            {/* ── STEP 3: USE MY LOCATION ───────────────────────────── */}
-            <div className="p-5 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-3">
+            {/* ── STEP 3: WHERE? ────────────────────────────────────── */}
+            <div className="p-5 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded bg-[#141817] text-[#A8C83A] flex items-center justify-center font-mono text-xs font-bold">
                     3
                   </span>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                    STEP 3: USE MY LOCATION
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#F1F3EE]">
+                    WHERE? (CAPTURED WITH YOUR CONSENT)
                   </h2>
                 </div>
                 <button
@@ -458,69 +459,69 @@ export default function ReportPage() {
               </div>
             </div>
 
-            {/* ── STEP 4: ADD DETAILS ───────────────────────────────── */}
-            <div className="p-5 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-3">
+            {/* ── STEP 4: DETAILS ─────────────────────────────────── */}
+            <div className="p-5 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-3">
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded bg-[#141817] text-[#A8C83A] flex items-center justify-center font-mono text-xs font-bold">
                   4
                 </span>
-                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                  STEP 4: ADD DETAILS
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#F1F3EE]">
+                  DETAILS
                 </h2>
               </div>
 
               <div className="space-y-3 text-xs">
                 <div>
-                  <label className="text-[11px] text-zinc-400 block mb-1">
-                    Location Landmark / Perimeter Note
+                  <label className="text-[11px] text-[#929A95] block mb-1">
+                    Landmark / Perimeter Note
                   </label>
                   <input
                     type="text"
                     value={locationName}
                     onChange={(e) => setLocationName(e.target.value)}
-                    className="w-full px-3 py-2 rounded bg-[#080A09] border border-[#242A27] text-zinc-200 focus:outline-none focus:border-[#A8C83A]/50 font-sans"
+                    className="w-full px-3 py-2 rounded bg-[#080A09] border border-[#242A27] text-[#F1F3EE] focus:outline-none focus:border-[#A8C83A]/50 font-sans"
                     placeholder="e.g. North Gate Perimeter, Orion Refining"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] text-zinc-400 block mb-1">
+                  <label className="text-[11px] text-[#929A95] block mb-1">
                     What Did You Observe? (Smell, density, direction)
                   </label>
                   <textarea
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="w-full px-3 py-2 rounded bg-[#080A09] border border-[#242A27] text-zinc-200 focus:outline-none focus:border-[#A8C83A]/50 font-sans resize-none"
+                    className="w-full px-3 py-2 rounded bg-[#080A09] border border-[#242A27] text-[#F1F3EE] focus:outline-none focus:border-[#A8C83A]/50 font-sans resize-none"
                     placeholder="Describe the visible smoke, odor intensity, or discharge..."
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="text-[11px] text-zinc-400 block mb-1">
+                  <label className="text-[11px] text-[#929A95] block mb-1">
                     Reporter Name / Identifier
                   </label>
                   <input
                     type="text"
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
-                    className="w-full px-3 py-2 rounded bg-[#080A09] border border-[#242A27] text-zinc-200 focus:outline-none focus:border-[#A8C83A]/50 font-sans"
+                    className="w-full px-3 py-2 rounded bg-[#080A09] border border-[#242A27] text-[#F1F3EE] focus:outline-none focus:border-[#A8C83A]/50 font-sans"
                   />
                 </div>
               </div>
             </div>
 
-            {/* ── STEP 5: SUBMIT ────────────────────────────────────── */}
-            <div className="p-5 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-3">
+            {/* ── STEP 5: FILE IT ───────────────────────────────────── */}
+            <div className="p-5 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-5 h-5 rounded bg-[#141817] text-[#A8C83A] flex items-center justify-center font-mono text-xs font-bold">
                     5
                   </span>
-                  <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                    STEP 5: SUBMIT REPORT
+                  <h2 className="text-xs font-bold uppercase tracking-wider text-[#F1F3EE]">
+                    FILE IT
                   </h2>
                 </div>
                 <span className="text-[10px] font-mono text-[#A8C83A]">
@@ -529,23 +530,23 @@ export default function ReportPage() {
               </div>
 
               <p className="text-[11px] text-[#929A95] leading-relaxed">
-                Submitting this report transmits your GPS-stamped evidence copy into the ONER correlation engine. The engine cross-references live stack CEMS and ambient stations without exposing private data.
+                Submitting this report transmits your evidence copy with captured metadata into the ONER correlation engine. The engine cross-references live stack CEMS and ambient stations without exposing private data.
               </p>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 px-4 rounded-lg bg-[#141817] hover:bg-[#1a221e] border border-[#A8C83A]/60 text-white font-mono font-bold text-xs tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full py-3 px-4 rounded bg-[#141817] hover:bg-[#1D2320] border border-[#A8C83A]/60 text-[#F1F3EE] font-mono font-bold text-xs tracking-wider transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
                     <RefreshCw size={14} className="animate-spin text-[#A8C83A]" />
-                    <span>CORRELATING WITH REGIONAL TELEMETRY...</span>
+                    <span>FUSING WITH REGIONAL TELEMETRY...</span>
                   </>
                 ) : (
                   <>
                     <ShieldCheck size={16} className="text-[#A8C83A]" />
-                    <span>SUBMIT EVIDENCE TO ONER NETWORK</span>
+                    <span>FILE CITIZEN REPORT</span>
                   </>
                 )}
               </button>
@@ -553,15 +554,15 @@ export default function ReportPage() {
           </form>
         ) : (
           /* ── Post-Submission Confirmation Dossier ──────────────── */
-          <div className="p-6 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-5">
+          <div className="p-6 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#242A27]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <div className="w-10 h-10 rounded-lg bg-[#141817] border border-[#A8C83A]/40 flex items-center justify-center text-[#A8C83A]">
                   <CheckCircle2 size={20} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-white">REPORT CORROBORATED</h2>
+                    <h2 className="text-base font-bold text-[#F1F3EE]">CASE CREATED & CORROBORATED</h2>
                     <span className="text-xs font-mono px-2 py-0.5 rounded bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/30 font-bold">
                       {submittedReport.id}
                     </span>
@@ -573,32 +574,32 @@ export default function ReportPage() {
               </div>
 
               <div className="text-right">
-                <div className="text-[10px] uppercase font-sans text-zinc-500">Points Awarded</div>
+                <div className="text-[10px] uppercase font-mono text-[#626A65]">Points Awarded</div>
                 <div className="text-lg font-mono font-bold text-[#A8C83A]">+50 Impact Points</div>
               </div>
             </div>
 
-            {/* Simple Citizen Outcome (No overwhelming raw telemetry) */}
+            {/* Simple Citizen Outcome */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
               <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27] space-y-1">
-                <span className="text-[10px] uppercase font-sans text-zinc-500 font-semibold">What You Reported</span>
-                <div className="font-semibold text-zinc-200">{submittedReport.category.replace('_', ' ')}</div>
+                <span className="text-[10px] uppercase font-mono text-[#626A65] font-semibold">What You Reported</span>
+                <div className="font-semibold text-[#F1F3EE]">{submittedReport.category.replace('_', ' ')}</div>
                 <p className="text-[11px] text-[#929A95] italic">&quot;{submittedReport.description}&quot;</p>
               </div>
 
               <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27] space-y-1">
-                <span className="text-[10px] uppercase font-sans text-zinc-500 font-semibold">What ONER Verified</span>
-                <div className="font-semibold text-emerald-400">{submittedReport.corroboration_score}% Sensor Corroborated</div>
+                <span className="text-[10px] uppercase font-mono text-[#626A65] font-semibold">What ONER Verified</span>
+                <div className="font-semibold text-[#A8C83A]">{submittedReport.corroboration_score}% Sensor Corroborated</div>
                 <p className="text-[11px] text-[#929A95]">Probable source: {submittedReport.likely_source}</p>
               </div>
             </div>
 
-            {/* Actions */}
+            {/* Actions: Open Case */}
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setSubmittedReport(null)}
-                className="text-xs font-mono text-[#929A95] hover:text-white cursor-pointer"
+                className="text-xs font-mono text-[#929A95] hover:text-[#F1F3EE] cursor-pointer"
               >
                 ← Submit Another Observation
               </button>
@@ -606,16 +607,16 @@ export default function ReportPage() {
               <div className="flex items-center gap-3">
                 <Link
                   href="/community"
-                  className="px-3.5 py-2 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#242A27] text-xs font-medium text-zinc-200 transition-colors"
+                  className="px-3.5 py-2 rounded bg-[#141817] hover:bg-[#1D2320] border border-[#242A27] text-xs font-medium text-[#929A95] hover:text-[#F1F3EE] transition-colors"
                 >
-                  View in Community Portal
+                  View Community Ledger
                 </Link>
 
                 <Link
-                  href={`/industry?case=${submittedReport.id}`}
-                  className="px-4 py-2 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#A8C83A]/60 text-xs font-mono font-bold text-[#A8C83A] transition-all flex items-center gap-1.5"
+                  href={`/case/${submittedReport.id}?level=field`}
+                  className="px-4 py-2 rounded bg-[#141817] hover:bg-[#1D2320] border border-[#A8C83A]/60 text-xs font-mono font-bold text-[#A8C83A] transition-all flex items-center gap-1.5"
                 >
-                  <span>INSPECT INDUSTRY CASE</span>
+                  <span>OPEN CASE DOSSIER</span>
                   <ArrowRight size={13} />
                 </Link>
               </div>
