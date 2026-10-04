@@ -28,7 +28,7 @@ const SEV_CONFIG = {
     color: 'text-amber-400',
     bg: 'bg-amber-500/10',
     border: 'border-amber-500/25',
-    badge: 'HIGH DEV',
+    badge: 'HIGH DEVIATION',
   },
   WATCH: {
     icon: Info,
@@ -61,7 +61,7 @@ export default function AlertBanner({
   const content = (
     <div
       onClick={onClick}
-      className={`px-4 py-3 rounded-lg bg-[#0d120f] border border-[#162018] hover:border-[#223026] hover:bg-[#101713] transition-colors flex items-center justify-between gap-4 group ${
+      className={`px-4 py-3 rounded-lg bg-[#080A09] border border-[#242A27] hover:border-[#38433e] hover:bg-[#121614] transition-colors flex items-center justify-between gap-4 group ${
         onClick ? 'cursor-pointer' : ''
       }`}
     >
@@ -72,7 +72,7 @@ export default function AlertBanner({
 
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className={`text-[10px] font-mono font-medium px-1.5 py-0.2 rounded border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
+            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
               {cfg.badge}
             </span>
             <span className="text-xs font-semibold text-zinc-200 truncate">
@@ -83,14 +83,14 @@ export default function AlertBanner({
             </span>
           </div>
 
-          <p className="text-xs text-zinc-400 truncate mt-0.5 max-w-xl">
+          <p className="text-xs text-[#929A95] truncate mt-0.5 max-w-xl">
             {evidence}
           </p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3 flex-shrink-0">
-        <span className="text-xs font-medium text-zinc-400 group-hover:text-zinc-200 transition-colors flex items-center gap-1">
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <span className="text-xs font-mono text-[#929A95] group-hover:text-[#A8C83A] transition-colors flex items-center gap-1">
           Investigate
           <ChevronRight size={12} />
         </span>

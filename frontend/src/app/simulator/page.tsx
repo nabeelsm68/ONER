@@ -65,7 +65,6 @@ export default function SimulatorPage() {
     });
   };
 
-  // Aggregated Portfolio Metrics
   const portfolio = useMemo(() => {
     const active = scenarios.filter((s) => selectedIds.has(s.intervention_id));
     const totalCO2Cut = active.reduce((sum, s) => sum + s.annual_co2_reduction_tonnes, 0);
@@ -94,108 +93,108 @@ export default function SimulatorPage() {
 
   return (
     <AppLayout
-      title="Intervention Simulator"
-      subtitle="Engineering Decision Workspace"
+      title="Intervention"
+      subtitle="Engineering Decision Workspace & Counterfactual Modeling"
       onRefresh={loadScenarios}
       isRefreshing={loading}
     >
-      <div className="space-y-6">
+      <div className="space-y-6 text-[#F1F3EE]">
         {/* ── CENTRAL ENGINEERING COMPARISON ─────────────────────── */}
-        <div className="p-6 rounded-xl bg-[#0e1310] border border-[#16201a]">
+        <div className="p-6 rounded-xl bg-[#0E1110] border border-[#242A27]">
           <div className="flex items-center justify-between flex-wrap gap-4 mb-5">
             <div>
-              <div className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
-                Counterfactual Decision Model
+              <div className="text-[10px] font-mono text-[#A8C83A] uppercase font-bold tracking-wider">
+                COUNTERFACTUAL DECISION MODEL &bull; THERMODYNAMIC SIMULATION
               </div>
-              <h1 className="text-xl font-bold text-zinc-100 mt-0.5">
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#F1F3EE] mt-0.5">
                 Physical Intervention Benchmarking
               </h1>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-zinc-300">
-              <span className="text-zinc-400">Selected Portfolio:</span>
-              <span className="px-2.5 py-1 rounded-md bg-[#131b15] text-zinc-100 font-semibold border border-[#202d23] font-mono text-[11px]">
-                {portfolio.activeCount} of {scenarios.length} Interventions Active
+            <div className="flex items-center gap-2 text-xs text-[#929A95]">
+              <span>Selected Interventions:</span>
+              <span className="px-2.5 py-1 rounded bg-[#141817] text-[#A8C83A] font-bold border border-[#A8C83A]/30 font-mono text-[11px]">
+                {portfolio.activeCount} OF {scenarios.length} ACTIVE
               </span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Card 1: CURRENT BASELINE */}
-            <div className="p-5 rounded-lg bg-[#0b0f0c] border border-[#141b16] flex flex-col justify-between">
+            <div className="p-5 rounded-lg bg-[#080A09] border border-[#242A27] flex flex-col justify-between">
               <div>
-                <div className="text-[10px] uppercase font-semibold text-zinc-400 tracking-wider">
+                <div className="text-[10px] uppercase font-bold text-[#929A95] tracking-wider">
                   1. BASELINE STATE
                 </div>
-                <div className="text-2xl font-bold font-mono text-zinc-200 mt-2">
+                <div className="text-2xl font-bold font-mono text-zinc-100 mt-2">
                   18.2 <span className="text-xs font-normal text-zinc-400">t CO₂ / day</span>
                 </div>
-                <p className="text-xs text-zinc-400 mt-2 leading-relaxed font-sans">
+                <p className="text-xs text-[#929A95] mt-2 leading-relaxed font-sans">
                   Operating with detected combustion drift in Furnace F-101 and unmitigated peak-tariff electrical demand.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#141b16] text-[10px] font-mono text-zinc-400">
-                CAPEX: $0 · OPEX Drift: High
+              <div className="mt-4 pt-3 border-t border-[#181E1C] text-[10px] font-mono text-[#626A65]">
+                CAPEX: $0 &bull; OPEX Drift: High
               </div>
             </div>
 
             {/* Card 2: DO NOTHING */}
-            <div className="p-5 rounded-lg bg-[#140e0e] border border-[#2b1717] flex flex-col justify-between">
+            <div className="p-5 rounded-lg bg-[#080A09] border border-red-500/25 flex flex-col justify-between">
               <div>
-                <div className="text-[10px] uppercase font-semibold text-red-400 tracking-wider">
+                <div className="text-[10px] uppercase font-bold text-red-400 tracking-wider">
                   2. COUNTERFACTUAL: DO NOTHING
                 </div>
                 <div className="text-2xl font-bold font-mono text-red-400 mt-2">
                   +14.2% <span className="text-xs font-normal text-red-400/80">Drift Surge</span>
                 </div>
-                <p className="text-xs text-zinc-300 mt-2 leading-relaxed font-sans">
+                <p className="text-xs text-[#929A95] mt-2 leading-relaxed font-sans">
                   Refractory degradation accelerates burner imbalance. Annual emissions increase by +320 t CO₂ with regulatory penalty exposure.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#241515] text-[10px] font-mono text-red-400">
+              <div className="mt-4 pt-3 border-t border-[#181E1C] text-[10px] font-mono text-red-400">
                 Cumulative Waste Cost: +$184,000 / yr
               </div>
             </div>
 
-            {/* Card 3: ONER INTERVENTION (Distinct, high-end, NOT neon) */}
-            <div className="p-5 rounded-lg bg-[#0f1712] border border-[#213526] flex flex-col justify-between">
+            {/* Card 3: ONER INTERVENTION */}
+            <div className="p-5 rounded-lg bg-[#141817] border border-[#A8C83A]/40 flex flex-col justify-between">
               <div>
-                <div className="text-[10px] uppercase font-semibold text-emerald-400 tracking-wider">
+                <div className="text-[10px] uppercase font-bold text-[#A8C83A] tracking-wider">
                   3. ONER INTERVENTION PORTFOLIO
                 </div>
-                <div className="text-2xl font-bold font-mono text-emerald-400 mt-2">
-                  -{portfolio.totalCO2Cut} <span className="text-xs font-normal text-emerald-400/80">t CO₂e / yr</span>
+                <div className="text-2xl font-bold font-mono text-[#A8C83A] mt-2">
+                  -{portfolio.totalCO2Cut} <span className="text-xs font-normal text-zinc-400">t CO₂e / yr</span>
                 </div>
                 <p className="text-xs text-zinc-300 mt-2 leading-relaxed font-sans">
                   Executing selected closed-loop interventions captures ${portfolio.totalSavingsUSD}/yr in energy and fuel cost abatement.
                 </p>
               </div>
-              <div className="mt-4 pt-3 border-t border-[#1c2e21] text-[10px] font-mono text-zinc-300 flex items-center justify-between">
+              <div className="mt-4 pt-3 border-t border-[#242A27] text-[10px] font-mono text-zinc-300 flex items-center justify-between">
                 <span>Capex: ${portfolio.totalCostUSD}</span>
-                <span className="text-emerald-400 font-semibold">Payback: {portfolio.paybackYears} yrs</span>
+                <span className="text-[#A8C83A] font-bold">Payback: {portfolio.paybackYears} yrs</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* ── SCENARIO BENCHMARKING CHART ──────────────────────── */}
-        <div className="p-6 rounded-xl bg-[#0e1310] border border-[#16201a]">
+        <div className="p-6 rounded-xl bg-[#0E1110] border border-[#242A27]">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <div className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
-                Scenario Abatement Comparison
+              <div className="text-[10px] font-mono text-[#929A95] uppercase tracking-wider">
+                SCENARIO ABATEMENT BENCHMARKING
               </div>
-              <h2 className="text-base font-semibold text-zinc-100 mt-0.5">
+              <h2 className="text-base font-bold text-[#F1F3EE] mt-0.5">
                 Annual CO₂ Reduction (Tonnes) by Intervention Scenario
               </h2>
             </div>
             <div className="flex items-center gap-3 text-xs font-mono">
-              <span className="flex items-center gap-1.5 text-zinc-300">
-                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
+              <span className="flex items-center gap-1.5 text-zinc-200">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#A8C83A]" />
                 Active in Portfolio
               </span>
-              <span className="flex items-center gap-1.5 text-zinc-400">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#222d25]" />
+              <span className="flex items-center gap-1.5 text-[#929A95]">
+                <span className="w-2.5 h-2.5 rounded-sm bg-[#242A27]" />
                 Inactive
               </span>
             </div>
@@ -204,16 +203,16 @@ export default function SimulatorPage() {
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#181E1C" />
                 <XAxis
                   dataKey="name"
-                  tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'JetBrains Mono' }}
-                  axisLine={{ stroke: '#1a221d' }}
+                  tick={{ fill: '#626A65', fontSize: 10, fontFamily: 'monospace' }}
+                  axisLine={{ stroke: '#242A27' }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'JetBrains Mono' }}
-                  axisLine={{ stroke: '#1a221d' }}
+                  tick={{ fill: '#626A65', fontSize: 10, fontFamily: 'monospace' }}
+                  axisLine={{ stroke: '#242A27' }}
                   tickLine={false}
                 />
                 <Tooltip
@@ -221,10 +220,10 @@ export default function SimulatorPage() {
                     if (!active || !payload?.length) return null;
                     const d = payload[0].payload;
                     return (
-                      <div className="p-2.5 rounded-lg bg-[#0e1310] border border-[#1e2b22] text-xs font-mono shadow-xl">
-                        <div className="text-zinc-200 font-semibold">{d.fullName}</div>
-                        <div className="text-emerald-400 mt-1">CO₂ Cut: -{d.co2Cut} tonnes/yr</div>
-                        <div className="text-sky-400">Savings: ${d.savings}k /yr</div>
+                      <div className="p-2.5 rounded-lg bg-[#0E1110] border border-[#242A27] text-xs font-mono shadow-xl">
+                        <div className="text-zinc-200 font-bold">{d.fullName}</div>
+                        <div className="text-[#A8C83A] mt-1">CO₂ Cut: -{d.co2Cut} tonnes/yr</div>
+                        <div className="text-teal-400">Savings: ${d.savings}k /yr</div>
                       </div>
                     );
                   }}
@@ -233,7 +232,8 @@ export default function SimulatorPage() {
                   {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={entry.selected ? '#10b981' : '#222d25'}
+                      fill={entry.selected ? '#A8C83A' : '#141817'}
+                      stroke={entry.selected ? '#A8C83A' : '#242A27'}
                     />
                   ))}
                 </Bar>
@@ -245,10 +245,10 @@ export default function SimulatorPage() {
         {/* ── RANKED INTERVENTION DECISION MATRIX ──────────────── */}
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-semibold text-zinc-300">
+            <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
               Available Autopilot Interventions ({scenarios.length})
             </span>
-            <span className="text-[10px] font-mono text-zinc-400">
+            <span className="text-[10px] font-mono text-[#929A95]">
               Ranked by Marginal Abatement Cost
             </span>
           </div>
@@ -263,13 +263,13 @@ export default function SimulatorPage() {
                   key={s.intervention_id}
                   className={`p-4 rounded-xl border transition-all ${
                     isSelected
-                      ? 'bg-[#111813] border-[#1f3024]'
-                      : 'bg-[#0e1310] border-[#16201a] opacity-80 hover:opacity-100 hover:border-[#1e2a22]'
+                      ? 'bg-[#141817] border-[#A8C83A]/40'
+                      : 'bg-[#0E1110] border-[#242A27] opacity-80 hover:opacity-100'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className="p-2 rounded-lg bg-[#0b0e0c] text-zinc-300 border border-[#162018] flex-shrink-0 mt-0.5">
+                      <div className="p-2 rounded-lg bg-[#080A09] text-[#A8C83A] border border-[#242A27] flex-shrink-0 mt-0.5">
                         {ICON_MAP[s.icon] || <SlidersHorizontal size={15} />}
                       </div>
 
@@ -278,15 +278,15 @@ export default function SimulatorPage() {
                           <span className="text-xs font-semibold text-zinc-100 truncate">
                             {s.name}
                           </span>
-                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-zinc-800/80 text-zinc-400 border border-zinc-700/40">
+                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#080A09] text-[#929A95] border border-[#242A27]">
                             #{idx + 1}
                           </span>
-                          <span className="text-[9px] font-sans px-1.5 py-0.2 rounded bg-[#131b15] text-zinc-300 border border-[#1d2720]">
+                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#080A09] text-zinc-300 border border-[#242A27]">
                             {s.category}
                           </span>
                         </div>
 
-                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed font-sans">
+                        <p className="text-xs text-[#929A95] mt-1 leading-relaxed font-sans">
                           {s.description}
                         </p>
                       </div>
@@ -296,34 +296,35 @@ export default function SimulatorPage() {
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleScenario(s.intervention_id)}
-                      className="w-4 h-4 rounded accent-emerald-500 cursor-pointer flex-shrink-0 mt-1"
+                      className="w-4 h-4 rounded accent-[#A8C83A] cursor-pointer flex-shrink-0 mt-1"
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-[#141b16] text-center">
+                  <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-[#181E1C] text-center">
                     <div>
-                      <div className="text-[9px] text-zinc-400 uppercase font-medium">CO₂ Cut</div>
-                      <div className="text-xs font-mono font-bold text-emerald-400 mt-0.5">
+                      <div className="text-[9px] text-[#929A95] uppercase font-sans">CO₂ Cut</div>
+                      <div className="text-xs font-mono font-bold text-[#A8C83A] mt-0.5">
                         -{s.annual_co2_reduction_tonnes.toFixed(1)} t/yr
                       </div>
                     </div>
                     <div>
-                      <div className="text-[9px] text-zinc-400 uppercase font-medium">Annual Savings</div>
+                      <div className="text-[9px] text-[#929A95] uppercase font-sans">Annual Savings</div>
                       <div className="text-xs font-mono font-bold text-zinc-200 mt-0.5">
                         ${Math.round(s.annual_monetary_savings_usd).toLocaleString()}
                       </div>
                     </div>
                     <div>
-                      <div className="text-[9px] text-zinc-400 uppercase font-medium">Payback</div>
+                      <div className="text-[9px] text-[#929A95] uppercase font-sans">Payback</div>
                       <div className="text-xs font-mono font-bold text-zinc-200 mt-0.5">
                         {s.payback_years?.toFixed(1) || '0.0'} yr
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 pt-2 border-t border-[#141b16] flex items-center justify-between text-[10px] font-mono text-zinc-400">
+                  <div className="mt-3 pt-2 border-t border-[#181E1C] flex items-center justify-between text-[10px] font-mono text-[#929A95]">
                     <span>Capex: ${s.implementation_cost_usd.toLocaleString()}</span>
                     <button
+                      type="button"
                       onClick={() => setExpandedId(isExpanded ? null : s.intervention_id)}
                       className="hover:text-zinc-200 flex items-center gap-1 font-sans cursor-pointer"
                     >
@@ -333,14 +334,14 @@ export default function SimulatorPage() {
                   </div>
 
                   {isExpanded && (
-                    <div className="mt-3 p-3 rounded-lg bg-[#0b0e0c] border border-[#141b16] text-[11px] font-mono text-zinc-400 space-y-1">
+                    <div className="mt-3 p-3 rounded-lg bg-[#080A09] border border-[#242A27] text-[11px] font-mono text-[#929A95] space-y-1">
                       <div className="flex justify-between">
                         <span>Energy Savings:</span>
                         <span className="text-zinc-200">{Math.round(s.annual_energy_savings_kwh).toLocaleString()} kWh/yr</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Environmental Impact Score:</span>
-                        <span className="text-emerald-400">{s.environmental_impact_score.toFixed(1)} / 100</span>
+                        <span className="text-[#A8C83A]">{s.environmental_impact_score.toFixed(1)} / 100</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Rank Score (Abatement/Cost):</span>

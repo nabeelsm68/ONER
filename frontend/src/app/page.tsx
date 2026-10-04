@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import AppLayout from '@/components/AppLayout';
 import AlertBanner from '@/components/AlertBanner';
-import { api } from '@/lib/api';
+import { api, CommunityReport, EnvironmentalImpactReport as EnvironmentalImpactReportType } from '@/lib/api';
 import {
   Cloud,
   Zap,
@@ -15,6 +15,11 @@ import {
   TrendingDown,
   TrendingUp,
   Radio,
+  ShieldCheck,
+  FileCheck2,
+  HelpCircle,
+  CheckCircle2,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -27,13 +32,14 @@ import {
 } from 'recharts';
 
 import EnvironmentalImpactReportModal from '@/components/EnvironmentalImpactReportModal';
-import { CommunityReport, EnvironmentalImpactReport } from '@/lib/api';
+import ScoreDefinitions from '@/components/ScoreDefinitions';
+import EvidenceTrustLayer from '@/components/EvidenceTrustLayer';
 
 export default function OverviewPage() {
   const [overview, setOverview] = useState<any>(null);
   const [analyticsData, setAnalyticsData] = useState<any[]>([]);
   const [communityReports, setCommunityReports] = useState<CommunityReport[]>([]);
-  const [selectedImpactReport, setSelectedImpactReport] = useState<EnvironmentalImpactReport | null>(null);
+  const [selectedImpactReport, setSelectedImpactReport] = useState<EnvironmentalImpactReportType | null>(null);
   const [_loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,327 +85,237 @@ export default function OverviewPage() {
   const alerts = overview?.active_alerts || [];
   const topRec = overview?.top_recommendation;
 
-  const scoreColor = hs.score >= 75 ? 'text-emerald-400' : hs.score >= 55 ? 'text-amber-400' : 'text-red-400';
-  const scoreStatus = hs.score >= 75 ? 'NOMINAL' : hs.score >= 55 ? 'ATTENTION' : 'CRITICAL';
-
   return (
     <AppLayout
-      title="Executive Overview"
-      subtitle="Autonomous Facility Telemetry"
+      title="Environmental Intelligence"
+      subtitle="Orion Refining Complex · Facility Unit 04"
       onRefresh={() => loadData(true)}
       isRefreshing={refreshing}
     >
-      <div className="space-y-6">
+      <div className="space-y-6 text-[#F1F3EE]">
         {/* Error Notification */}
         {error && (
-          <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono">
+          <div className="p-3.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-mono">
             {error}
           </div>
         )}
 
-        {/* ── 0. COMMUNITY-TO-INDUSTRY NETWORK HERO & CLOSED LOOP ── */}
-        <div className="rounded-xl bg-[#0D0F0F] border border-[#202525] p-6 space-y-6 relative overflow-hidden shadow-lg">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-            <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-[#121515] border border-[#202525] text-xs font-semibold text-[#B7D83D]">
-                <span>ONER PLATFORM</span>
-                <span className="text-zinc-600">·</span>
-                <span className="text-zinc-300 font-normal">Closed-Loop Environmental Network</span>
-              </div>
-              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-[#F2F3EF]">
-                Environmental Intelligence for Cleaner Communities
+        {/* ── 1. ENTERPRISE HEADER STRIP (Section 7) ───────────── */}
+        <div className="p-5 rounded-xl bg-[#0E1110] border border-[#242A27] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono tracking-widest text-[#A8C83A] uppercase font-bold">
+                ONER &bull; ENVIRONMENTAL INTELLIGENCE
+              </span>
+              <span className="text-zinc-600 font-mono">&bull;</span>
+              <span className="text-[10px] font-mono text-[#929A95]">
+                COMMUNITY-TO-INDUSTRY ACCOUNTABILITY NETWORK
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#F1F3EE]">
+                Orion Refining Complex
               </h1>
-              <p className="text-xs md:text-sm text-[#8D9490] leading-relaxed">
-                Turn community pollution reports and industrial environmental data into evidence, action, and measurable outcomes.
-              </p>
-            </div>
-
-            {/* Hero CTAs */}
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3">
-              <Link
-                href="/report"
-                className="px-4 py-2.5 rounded-lg bg-[#152218] hover:bg-[#1a2c1f] border border-[#B7D83D]/60 text-xs font-bold text-white tracking-wide transition-all shadow-md flex items-center gap-2 whitespace-nowrap"
-              >
-                <span>REPORT A POLLUTION ISSUE</span>
-                <ArrowRight size={14} className="text-[#B7D83D]" />
-              </Link>
-              <Link
-                href="/government"
-                className="px-4 py-2.5 rounded-lg bg-[#121515] hover:bg-[#181d1b] border border-[#202525] text-xs font-semibold text-zinc-300 hover:text-white transition-all whitespace-nowrap"
-              >
-                OPEN COMMAND CENTER
-              </Link>
-            </div>
-          </div>
-
-          {/* Three Stakeholder Pillars */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
-            <Link
-              href="/community"
-              className="p-3.5 rounded-lg bg-[#080909] border border-[#202525] hover:border-emerald-500/40 transition-colors group space-y-1.5"
-            >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-zinc-200">1. GENERAL PUBLIC</span>
-                <span className="text-[10px] font-mono text-emerald-400 font-semibold">REPORT → PROTECT → EARN</span>
-              </div>
-              <p className="text-[11px] text-[#8D9490] leading-relaxed">
-                Capture timestamped GPS optical evidence. Earn verified Community Impact Points when your report correlates with industrial sensors.
-              </p>
-            </Link>
-
-            <Link
-              href="/industry"
-              className="p-3.5 rounded-lg bg-[#080909] border border-[#202525] hover:border-teal-500/40 transition-colors group space-y-1.5"
-            >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-zinc-200">2. INDUSTRY</span>
-                <span className="text-[10px] font-mono text-teal-400 font-semibold">COMPLY → OPTIMIZE → SAVE</span>
-              </div>
-              <p className="text-[11px] text-[#8D9490] leading-relaxed">
-                Receive corroborated incident dispatches. Execute model-predictive setpoint optimizations under the Environmental Pact to avoid penalties.
-              </p>
-            </Link>
-
-            <Link
-              href="/government"
-              className="p-3.5 rounded-lg bg-[#080909] border border-[#202525] hover:border-amber-500/40 transition-colors group space-y-1.5"
-            >
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-zinc-200">3. GOVERNMENT</span>
-                <span className="text-[10px] font-mono text-amber-400 font-semibold">SEE → VERIFY → ACT</span>
-              </div>
-              <p className="text-[11px] text-[#8D9490] leading-relaxed">
-                Regional environmental surveillance with auditable evidence trails. Mandate corrective action and measure permanent air/water restoration.
-              </p>
-            </Link>
-          </div>
-
-          {/* Interactive Closed Loop Conduits Diagram */}
-          <div className="p-3 rounded-lg bg-[#080909] border border-[#1b221e] flex items-center justify-between text-[11px] font-mono text-zinc-400 overflow-x-auto gap-2">
-            <span className="text-emerald-400 font-semibold">CITIZEN</span>
-            <span className="text-zinc-600">→</span>
-            <span className="text-[#B7D83D] font-semibold">ONER ENGINE</span>
-            <span className="text-zinc-600">→</span>
-            <span className="text-teal-400 font-semibold">INDUSTRY</span>
-            <span className="text-zinc-600">→</span>
-            <span className="text-amber-400 font-semibold">GOVERNMENT</span>
-            <span className="text-zinc-600">→</span>
-            <span className="text-emerald-400 font-semibold">CITIZEN (RESOLVED + REWARD)</span>
-          </div>
-        </div>
-
-        {/* ── 1. FACILITY STATUS STRIP ─────────────────────────── */}
-        <div className="px-4 py-2.5 rounded-lg bg-[#0E1110] border border-[#242A27] flex items-center justify-between flex-wrap gap-3 text-xs">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1.5 font-medium text-[#F1F3EE]">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-[#929A95]">Facility:</span>
-              <span className="font-semibold text-white">Orion Refining Complex</span>
-            </span>
-            <span className="text-[#242A27]">|</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[#929A95]">Status:</span>
-              <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold">
-                OPERATIONAL / AT RISK
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold">
+                STATUS: OPERATIONAL / AT RISK
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-[11px] font-mono text-[#929A95]">
-            <span className="flex items-center gap-1.5">
-              <Radio size={12} className="text-[#A8C83A]" />
-              <span>Simulated Telemetry 1.0 Hz</span>
-            </span>
-            <span className="text-zinc-700">·</span>
-            <span>Deterministic Autopilot Engine</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <ScoreDefinitions variant="button-modal" />
+            <Link
+              href="/report"
+              className="px-3.5 py-1.5 rounded-lg bg-[#141817] hover:bg-[#1a221e] border border-[#A8C83A]/50 text-xs font-mono font-bold text-[#A8C83A] transition-colors flex items-center gap-1.5"
+            >
+              <span>+ FILE CITIZEN REPORT</span>
+            </Link>
           </div>
         </div>
 
-        {/* ── 2. ENVIRONMENTAL HEALTH & WHAT ONER FOUND (CENTRAL INTELLIGENCE) ── */}
+        {/* ── 2. MAIN KPI & AUTONOMOUS BRIEFING (Section 7) ────── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-          {/* Health Index Metric */}
+          {/* Main KPI: ENVIRONMENTAL HEALTH 87.3 */}
           <div className="lg:col-span-4 p-6 rounded-xl bg-[#0E1110] border border-[#242A27] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-xs font-semibold tracking-tight text-[#929A95] uppercase">
-                  Environmental Health
+                  ENVIRONMENTAL HEALTH INDEX
                 </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141817] text-amber-400 border border-amber-500/20">
-                  AT RISK (NOx ELEVATED)
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/25 font-bold">
+                  ATTENTION / AT RISK
                 </span>
               </div>
 
-              <div className="mt-5 flex items-baseline gap-2">
+              <div className="mt-4 flex items-baseline gap-2">
                 <span className="text-6xl font-bold font-mono tracking-tight text-[#A8C83A]">
                   87.3
                 </span>
                 <span className="text-[#626A65] font-mono text-sm">/ 100</span>
               </div>
-              
-              <div className="text-sm font-semibold text-[#F1F3EE] mt-2">
-                Composite Facility Rating
+
+              <div className="text-xs font-semibold text-[#F1F3EE] mt-2">
+                Operational Environmental Score
               </div>
-              <p className="text-xs text-[#929A95] mt-1.5 leading-relaxed font-sans">
-                Deterministic weighted score across emissions, thermal balance, electrical grid intensity, and air quality risk.
+              <p className="text-[11px] text-[#929A95] mt-1 leading-relaxed">
+                Deterministic aggregate score: 100 - Σ(weighted deviation from 30-day baseline). Penalized primarily by Furnace F-101 NOx drift (+31.4%) and thermal degradation.
               </p>
             </div>
 
-            {/* Sub-component metrics bar */}
-            <div className="mt-6 pt-4 border-t border-[#242A27] grid grid-cols-4 gap-2 text-center">
+            {/* Sub-component metrics row */}
+            <div className="mt-5 pt-3.5 border-t border-[#242A27] grid grid-cols-4 gap-2 text-center">
               <div>
                 <div className="text-[10px] text-[#929A95] font-medium">CO₂e</div>
-                <div className="text-xs font-mono font-semibold text-[#F1F3EE] mt-1">124.6t</div>
+                <div className="text-xs font-mono font-semibold text-[#F1F3EE] mt-0.5">124.6t</div>
               </div>
               <div>
                 <div className="text-[10px] text-[#929A95] font-medium">Energy</div>
-                <div className="text-xs font-mono font-semibold text-[#F1F3EE] mt-1">28.8 MWh</div>
+                <div className="text-xs font-mono font-semibold text-[#F1F3EE] mt-0.5">28.8 MWh</div>
               </div>
               <div>
                 <div className="text-[10px] text-[#929A95] font-medium">Water</div>
-                <div className="text-xs font-mono font-semibold text-[#F1F3EE] mt-1">64.0 m³</div>
+                <div className="text-xs font-mono font-semibold text-[#F1F3EE] mt-0.5">64.0 m³</div>
               </div>
               <div>
-                <div className="text-[10px] text-[#929A95] font-medium">Air Quality</div>
-                <div className="text-xs font-mono font-semibold text-amber-400 mt-1">MODERATE</div>
+                <div className="text-[10px] text-[#929A95] font-medium">Air Risk</div>
+                <div className="text-xs font-mono font-semibold text-amber-400 mt-0.5">HIGH NOx</div>
               </div>
             </div>
           </div>
 
-          {/* Central Intelligence Layer: What ONER Found & Recommends */}
+          {/* ONER AUTONOMOUS BRIEFING */}
           <div className="lg:col-span-8 p-6 rounded-xl bg-[#0E1110] border border-[#242A27] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-[#A8C83A]" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#F1F3EE]">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#F1F3EE]">
                     ONER Autonomous Briefing
                   </span>
                 </div>
-                <span className="text-[11px] font-mono text-[#929A95]">
-                  Causal Inference & Isolation Forest
+                <span className="text-[10px] font-mono text-[#929A95]">
+                  MODEL: Isolation Forest · Causal Root Cause Engine
                 </span>
               </div>
 
               <div className="mt-4">
-                <h3 className="text-lg font-semibold text-[#F1F3EE]">
-                  Elevated NOx detected around Furnace F-101. Community report COMM-2026-00421 corroborates the signal. Recommended damper adjustment is expected to reduce emissions.
+                <h3 className="text-lg font-semibold text-[#F1F3EE] leading-snug">
+                  Elevated NOx detected around Furnace F-101. Community report COMM-2026-00421 corroborates the signal. Recommended intervention is expected to reduce emissions.
                 </h3>
-                <p className="text-xs text-[#929A95] mt-2 leading-relaxed font-sans max-w-3xl">
-                  ONER telemetry observed an air-fuel ratio drift resulting in simultaneous thermal efficiency loss and optical smoke plumes. Citizen optical evidence timestamped at 14:02 corroborates the burner plenum manifold 4B excursion with 89.4% correlation confidence.
+                <p className="text-xs text-[#929A95] mt-2 leading-relaxed">
+                  CEMS optical density spiked simultaneously with citizen observations at the Sector 4 perimeter. Isolation Forest anomaly magnitude is 0.884 (High Deviation). Root-Cause Confidence is 99.4% pointing to thermal efficiency degradation on Burner F-101B.
                 </p>
               </div>
 
-              {/* Reasoning Chain Strip */}
-              <div className="mt-5 p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              {/* 4-Column Causal Matrix */}
+              <div className="mt-4 p-3 rounded-lg bg-[#080A09] border border-[#242A27] grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                 <div>
-                  <div className="text-[10px] text-zinc-400 uppercase font-medium">Detection Signal</div>
-                  <div className="font-mono text-zinc-200 mt-0.5 font-medium">+18.4°C Drift</div>
+                  <div className="text-[10px] text-[#929A95] uppercase font-sans">1. What Happened?</div>
+                  <div className="font-mono text-amber-400 mt-0.5 font-bold">NOx +31.4% (131.4 mg)</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-zinc-400 uppercase font-medium">Root Cause</div>
-                  <div className="font-sans text-zinc-200 mt-0.5 font-medium">Gas Volume Surge</div>
+                  <div className="text-[10px] text-[#929A95] uppercase font-sans">2. Why Did It Happen?</div>
+                  <div className="font-sans text-zinc-200 mt-0.5">Burner trim drift (0.94)</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-zinc-400 uppercase font-medium">Confidence</div>
-                  <div className="font-mono text-emerald-400 mt-0.5 font-medium">99.4% Verified</div>
+                  <div className="text-[10px] text-[#929A95] uppercase font-sans">3. What To Do?</div>
+                  <div className="font-mono text-[#A8C83A] mt-0.5 font-bold">Damper Trim 1.042</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-zinc-400 uppercase font-medium">Action Path</div>
-                  <div className="font-mono text-zinc-200 mt-0.5 font-medium">Damper Trim 1.042</div>
+                  <div className="text-[10px] text-[#929A95] uppercase font-sans">4. Projected Result</div>
+                  <div className="font-mono text-emerald-400 mt-0.5 font-bold">↓ 14.2 tCO₂e / day</div>
                 </div>
               </div>
             </div>
 
-            {/* WHAT ONER RECOMMENDS FOOTER */}
-            <div className="mt-5 pt-3.5 border-t border-[#18231c] flex items-center justify-between flex-wrap gap-3">
-              <div className="text-xs text-zinc-300 font-sans">
-                <span className="text-zinc-400">Recommendation:</span> Actuate damper trim to restore stoichiometric combustion
-              </div>
-              <div className="flex items-center gap-2.5">
+            <div className="mt-4 pt-3 border-t border-[#242A27] flex items-center justify-between flex-wrap gap-2 text-xs">
+              <span className="text-[#929A95]">
+                Corroborated Case: <strong className="text-zinc-200 font-mono">COMM-2026-00421</strong> (89.4% Confidence)
+              </span>
+              <div className="flex items-center gap-2">
                 <Link
                   href="/investigation"
-                  className="px-3 py-1.5 rounded-lg bg-[#141c16] hover:bg-[#1a251e] border border-[#1e2b22] text-xs font-medium text-zinc-200 hover:text-white transition-colors flex items-center gap-1.5"
+                  className="px-3 py-1.5 rounded-lg bg-[#141817] hover:bg-[#1a221e] border border-[#242A27] text-xs font-medium text-zinc-200 hover:text-white transition-colors"
                 >
-                  <span>Investigate Cause</span>
-                  <ArrowRight size={12} />
+                  Investigate Anomaly
                 </Link>
                 <Link
-                  href="/simulator"
-                  className="px-3.5 py-1.5 rounded-lg bg-[#142219] hover:bg-[#1a2d21] border border-[#213829] text-xs font-medium text-zinc-100 hover:text-white transition-colors flex items-center gap-1.5"
+                  href="/industry"
+                  className="px-3 py-1.5 rounded-lg bg-[#141817] hover:bg-[#1a221e] border border-[#A8C83A]/40 text-xs font-medium text-[#A8C83A] hover:text-[#C4DF61] transition-colors flex items-center gap-1"
                 >
-                  <span>Simulate Action</span>
-                  <ArrowRight size={12} className="text-emerald-400" />
+                  <span>Execute Industry Action</span>
+                  <ArrowRight size={12} />
                 </Link>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── 3. COMPACT ENVIRONMENTAL INTELLIGENCE STRIP (5 METRICS) ── */}
-        <div className="rounded-xl bg-[#0c100e] border border-[#141b16] overflow-hidden">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-y sm:divide-y-0 lg:divide-x divide-[#141c16]">
-            {/* KPI 1 */}
+        {/* ── 3. CLEAN KPI STRIP (CO₂e, Energy, Water, Air Quality) ── */}
+        <div className="rounded-xl bg-[#0E1110] border border-[#242A27] overflow-hidden">
+          <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#242A27]">
+            {/* KPI: CO₂e */}
             <div className="p-4 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-zinc-400 mb-2">
-                <span className="text-xs font-medium text-zinc-300">CO₂ Emissions</span>
-                <Cloud size={14} className="text-zinc-500" />
+              <div className="flex items-center justify-between text-xs text-[#929A95] mb-1">
+                <span className="font-medium text-zinc-300">CO₂e Emissions</span>
+                <Cloud size={14} className="text-[#929A95]" />
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-2xl font-bold font-mono tracking-tight text-zinc-100">
                   {kpis?.co2_tonnes?.value?.toFixed(1) || '124.6'}
                 </span>
-                <span className="text-xs font-mono text-zinc-400">t CO₂</span>
+                <span className="text-xs font-mono text-[#929A95]">t CO₂e/7d</span>
               </div>
               <div className="mt-2 flex items-center gap-1 font-mono text-[11px] text-emerald-400">
                 <TrendingDown size={12} />
                 <span>-0.2%</span>
-                <span className="text-zinc-400 font-sans text-[10px] ml-1">7d avg</span>
+                <span className="text-[#929A95] font-sans text-[10px] ml-1">vs 7d avg</span>
               </div>
             </div>
 
-            {/* KPI 2 */}
+            {/* KPI: Energy */}
             <div className="p-4 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-zinc-400 mb-2">
-                <span className="text-xs font-medium text-zinc-300">Electricity Rate</span>
-                <Zap size={14} className="text-zinc-500" />
+              <div className="flex items-center justify-between text-xs text-[#929A95] mb-1">
+                <span className="font-medium text-zinc-300">Electrical Energy</span>
+                <Zap size={14} className="text-[#929A95]" />
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-2xl font-bold font-mono tracking-tight text-zinc-100">
                   {kpis?.electricity_kwh?.value ? (kpis.electricity_kwh.value / 1000).toFixed(1) : '28.8'}
                 </span>
-                <span className="text-xs font-mono text-zinc-400">MWh/day</span>
+                <span className="text-xs font-mono text-[#929A95]">MWh/day</span>
               </div>
-              <div className="mt-2 flex items-center gap-1 font-mono text-[11px] text-zinc-300">
+              <div className="mt-2 flex items-center gap-1 font-mono text-[11px] text-zinc-400">
                 <TrendingDown size={12} />
                 <span>-0.6%</span>
-                <span className="text-zinc-400 font-sans text-[10px] ml-1">7d avg</span>
+                <span className="text-[#929A95] font-sans text-[10px] ml-1">nominal</span>
               </div>
             </div>
 
-            {/* KPI 3 */}
+            {/* KPI: Water */}
             <div className="p-4 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-zinc-400 mb-2">
-                <span className="text-xs font-medium text-zinc-300">Cooling Water</span>
-                <Droplets size={14} className="text-zinc-500" />
+              <div className="flex items-center justify-between text-xs text-[#929A95] mb-1">
+                <span className="font-medium text-zinc-300">Water Consumption</span>
+                <Droplets size={14} className="text-[#929A95]" />
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-2xl font-bold font-mono tracking-tight text-zinc-100">
                   {kpis?.water_liters?.value ? (kpis.water_liters.value / 1000).toFixed(1) : '64.0'}
                 </span>
-                <span className="text-xs font-mono text-zinc-400">m³/day</span>
+                <span className="text-xs font-mono text-[#929A95]">m³/day</span>
               </div>
               <div className="mt-2 flex items-center gap-1 font-mono text-[11px] text-teal-400">
                 <TrendingUp size={12} />
-                <span>+0.8%</span>
-                <span className="text-zinc-400 font-sans text-[10px] ml-1">recirculation</span>
+                <span>81.2%</span>
+                <span className="text-[#929A95] font-sans text-[10px] ml-1">recirculation</span>
               </div>
             </div>
 
-            {/* KPI 4 */}
+            {/* KPI: Air Quality */}
             <div className="p-4 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-zinc-400 mb-2">
-                <span className="text-xs font-medium text-zinc-300">Air Quality Risk</span>
-                <Wind size={14} className="text-zinc-500" />
+              <div className="flex items-center justify-between text-xs text-[#929A95] mb-1">
+                <span className="font-medium text-zinc-300">Air Quality</span>
+                <Wind size={14} className="text-amber-400" />
               </div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-2xl font-bold font-sans tracking-tight text-amber-400">
@@ -408,114 +324,95 @@ export default function OverviewPage() {
               </div>
               <div className="mt-2 flex items-center gap-1 font-mono text-[11px] text-amber-400">
                 <TrendingUp size={12} />
-                <span>NOx: {kpis?.air_quality_risk?.nox_kg?.toFixed(1) || '17.3'}kg</span>
-                <span className="text-zinc-400 font-sans text-[10px] ml-1">+12.4%</span>
-              </div>
-            </div>
-
-            {/* KPI 5 */}
-            <div className="p-4 flex flex-col justify-between">
-              <div className="flex items-center justify-between text-zinc-400 mb-2">
-                <span className="text-xs font-medium text-zinc-300">Carbon Intensity</span>
-                <Activity size={14} className="text-zinc-500" />
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-bold font-mono tracking-tight text-zinc-100">
-                  {kpis?.carbon_intensity?.value?.toFixed(3) || '0.044'}
-                </span>
-                <span className="text-xs font-mono text-zinc-400">t CO₂/t</span>
-              </div>
-              <div className="mt-2 flex items-center gap-1 font-mono text-[11px] text-emerald-400">
-                <TrendingDown size={12} />
-                <span>-0.2%</span>
-                <span className="text-zinc-400 font-sans text-[10px] ml-1">per ton product</span>
+                <span>NOx: 131.4 mg</span>
+                <span className="text-[#929A95] font-sans text-[10px] ml-1">(+31.4% excess)</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* ── 4. DOMINANT ENVIRONMENTAL TRAJECTORY ─────────────── */}
-        <div className="p-6 rounded-xl bg-[#0e1310] border border-[#16201a]">
-          <div className="flex items-center justify-between flex-wrap gap-4 mb-5">
+        {/* ── 4. ENVIRONMENTAL TRAJECTORY (Section 7) ─────────── */}
+        <div className="p-6 rounded-xl bg-[#0E1110] border border-[#242A27]">
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
             <div>
-              <div className="text-[11px] font-medium text-zinc-400 uppercase tracking-wider">
-                Longitudinal Telemetry Correlation
+              <div className="text-[10px] font-mono text-[#929A95] uppercase tracking-wider">
+                LONGITUDINAL EMISSIONS TELEMETRY
               </div>
-              <h2 className="text-base font-semibold text-zinc-100 mt-0.5">
-                21-Day Environmental Trajectory & Output
+              <h2 className="text-base font-bold text-[#F1F3EE] mt-0.5">
+                Environmental Trajectory & Production Alignment
               </h2>
             </div>
 
             {/* Restrained Signal Selector */}
-            <div className="flex items-center gap-1 p-1 rounded-lg bg-[#090c0a] border border-[#141b16]">
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-[#080A09] border border-[#242A27]">
               <button
                 onClick={() => setActiveSignal('co2')}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                className={`px-3 py-1.5 rounded text-xs font-mono transition-all ${
                   activeSignal === 'co2'
-                    ? 'bg-[#18221b] text-zinc-100 font-semibold border border-[#27372d]'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-[#141817] text-[#A8C83A] font-bold border border-[#A8C83A]/40'
+                    : 'text-[#929A95] hover:text-[#F1F3EE]'
                 }`}
               >
-                CO₂ Emissions (t)
+                CO₂e (t)
               </button>
               <button
                 onClick={() => setActiveSignal('energy')}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                className={`px-3 py-1.5 rounded text-xs font-mono transition-all ${
                   activeSignal === 'energy'
-                    ? 'bg-[#18221b] text-zinc-100 font-semibold border border-[#27372d]'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-[#141817] text-[#A8C83A] font-bold border border-[#A8C83A]/40'
+                    : 'text-[#929A95] hover:text-[#F1F3EE]'
                 }`}
               >
                 Energy (MWh)
               </button>
               <button
                 onClick={() => setActiveSignal('production')}
-                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                className={`px-3 py-1.5 rounded text-xs font-mono transition-all ${
                   activeSignal === 'production'
-                    ? 'bg-[#18221b] text-zinc-100 font-semibold border border-[#27372d]'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-[#141817] text-[#A8C83A] font-bold border border-[#A8C83A]/40'
+                    : 'text-[#929A95] hover:text-[#F1F3EE]'
                 }`}
               >
-                Output (tons)
+                Output (t)
               </button>
             </div>
           </div>
 
-          <div className="h-72 sm:h-80 w-full">
+          <div className="h-64 sm:h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={analyticsData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="co2Grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.22} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                    <stop offset="5%" stopColor="#A8C83A" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#A8C83A" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="energyGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0284c7" stopOpacity={0.22} />
+                    <stop offset="5%" stopColor="#0284c7" stopOpacity={0.25} />
                     <stop offset="95%" stopColor="#0284c7" stopOpacity={0.0} />
                   </linearGradient>
                   <linearGradient id="prodGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#71717a" stopOpacity={0.22} />
+                    <stop offset="5%" stopColor="#71717a" stopOpacity={0.2} />
                     <stop offset="95%" stopColor="#71717a" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#181E1C" />
                 <XAxis
                   dataKey="date"
-                  tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'JetBrains Mono' }}
-                  axisLine={{ stroke: '#1a221d' }}
+                  tick={{ fill: '#626A65', fontSize: 10, fontFamily: 'monospace' }}
+                  axisLine={{ stroke: '#242A27' }}
                   tickLine={false}
                 />
                 <YAxis
-                  tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'JetBrains Mono' }}
-                  axisLine={{ stroke: '#1a221d' }}
+                  tick={{ fill: '#626A65', fontSize: 10, fontFamily: 'monospace' }}
+                  axisLine={{ stroke: '#242A27' }}
                   tickLine={false}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0e1310',
-                    borderColor: '#1e2b22',
-                    borderRadius: '8px',
-                    fontFamily: 'JetBrains Mono',
+                    backgroundColor: '#0E1110',
+                    borderColor: '#242A27',
+                    borderRadius: '6px',
+                    fontFamily: 'monospace',
                     fontSize: '11px',
                   }}
                 />
@@ -524,7 +421,7 @@ export default function OverviewPage() {
                     type="monotone"
                     dataKey="co2"
                     name="CO₂ (tonnes)"
-                    stroke="#10b981"
+                    stroke="#A8C83A"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#co2Grad)"
@@ -546,7 +443,7 @@ export default function OverviewPage() {
                     type="monotone"
                     dataKey="production"
                     name="Output (tons)"
-                    stroke="#71717a"
+                    stroke="#929A95"
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#prodGrad)"
@@ -557,68 +454,87 @@ export default function OverviewPage() {
           </div>
         </div>
 
-        {/* ── 5. ACTIVE CASES & RECENT IMPACT (REQUIREMENT 13) ── */}
+        {/* ── 5. ACTIVE CASES & RECENT MEASURED IMPACT (Section 7 & 8) ─ */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* Active Cases */}
-          <div className="lg:col-span-7 p-5 rounded-xl bg-[#0E1110] border border-[#242A27]">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-[10px] uppercase font-mono tracking-wider text-[#929A95]">Accountability Pipeline</div>
-                <h3 className="text-sm font-bold text-[#F1F3EE]">Active Cases & Incident Dispatches</h3>
+          {/* Active Environmental Cases */}
+          <div className="lg:col-span-7 p-5 rounded-xl bg-[#0E1110] border border-[#242A27] flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3.5">
+                <div>
+                  <div className="text-[10px] uppercase font-mono tracking-wider text-[#929A95]">
+                    ACCOUNTABILITY PIPELINE
+                  </div>
+                  <h3 className="text-sm font-bold text-[#F1F3EE]">
+                    Active Environmental Cases ({communityReports.length})
+                  </h3>
+                </div>
+                <Link href="/community" className="text-xs font-mono text-[#A8C83A] hover:underline">
+                  All Cases →
+                </Link>
               </div>
-              <Link href="/community" className="text-xs font-mono text-[#A8C83A] hover:underline">
-                View All Community Cases →
-              </Link>
+
+              <div className="space-y-2.5">
+                {communityReports.slice(0, 3).map((rep) => (
+                  <div
+                    key={rep.id}
+                    className="p-3 rounded-lg bg-[#080A09] border border-[#242A27] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-bold text-[#F1F3EE]">{rep.id}</span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/30">
+                          {rep.corroboration_score}% CORRELATED
+                        </span>
+                        <span className="text-[10px] font-mono text-zinc-500">
+                          {rep.severity}
+                        </span>
+                      </div>
+                      <div className="text-zinc-300 font-medium truncate">{rep.title}</div>
+                      <div className="text-[11px] text-[#929A95] font-mono truncate">
+                        {rep.correlated_facility} &bull; {rep.likely_source}
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 flex items-center gap-2">
+                      {rep.environmental_impact_report ? (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedImpactReport(rep.environmental_impact_report || null)}
+                          className="px-2.5 py-1.5 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#A8C83A]/40 text-[11px] font-mono text-[#A8C83A] font-semibold transition-colors cursor-pointer"
+                        >
+                          Impact Report
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/industry?case=${rep.id}`}
+                          className="px-2.5 py-1.5 rounded bg-[#141817] hover:bg-[#1f2622] border border-[#242A27] text-[11px] font-mono text-zinc-300 transition-colors"
+                        >
+                          Inspect
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="space-y-2.5">
-              {communityReports.slice(0, 3).map((rep) => (
-                <div
-                  key={rep.id}
-                  className="p-3 rounded-lg bg-[#080A09] border border-[#242A27] flex items-center justify-between gap-3 text-xs"
-                >
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-[#F1F3EE]">{rep.id}</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/30">
-                        {rep.corroboration_score ? `${(rep.corroboration_score * 100).toFixed(1)}% CORRELATED` : 'CORRELATED'}
-                      </span>
-                    </div>
-                    <div className="text-zinc-300 font-medium truncate">{rep.title}</div>
-                    <div className="text-[11px] text-[#929A95] font-mono truncate">
-                      {rep.correlated_facility || 'Orion Refining Complex'} · {rep.status}
-                    </div>
-                  </div>
-
-                  <div className="shrink-0 flex items-center gap-2">
-                    {rep.environmental_impact_report ? (
-                      <button
-                        onClick={() => setSelectedImpactReport(rep.environmental_impact_report || null)}
-                        className="px-2.5 py-1.5 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#A8C83A]/40 text-[11px] font-mono text-[#A8C83A] font-semibold transition-colors"
-                      >
-                        Impact Report
-                      </button>
-                    ) : (
-                      <Link
-                        href="/industry"
-                        className="px-2.5 py-1.5 rounded bg-[#141817] hover:bg-[#1f2622] border border-[#242A27] text-[11px] font-mono text-zinc-300 transition-colors"
-                      >
-                        Inspect
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className="mt-4 pt-3 border-t border-[#242A27] flex items-center justify-between text-xs text-[#929A95]">
+              <span>Citizen Evidence Fused with Physical CEMS Telemetry</span>
+              <span className="font-mono text-[11px]">Orion Unit 04</span>
             </div>
           </div>
 
-          {/* Recent Impact (Measurable Reductions) */}
+          {/* Recent Measured Impact */}
           <div className="lg:col-span-5 p-5 rounded-xl bg-[#0E1110] border border-[#242A27] flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-3.5">
                 <div>
-                  <div className="text-[10px] uppercase font-mono tracking-wider text-[#929A95]">Measured Results</div>
-                  <h3 className="text-sm font-bold text-[#F1F3EE]">Recent Environmental Impact</h3>
+                  <div className="text-[10px] uppercase font-mono tracking-wider text-[#929A95]">
+                    VERIFIED OUTCOMES
+                  </div>
+                  <h3 className="text-sm font-bold text-[#F1F3EE]">
+                    Recent Measured Environmental Impact
+                  </h3>
                 </div>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/30">
                   MRV-READY
@@ -627,135 +543,64 @@ export default function OverviewPage() {
 
               <div className="grid grid-cols-2 gap-2.5">
                 <div className="p-3 rounded-lg bg-[#080A09] border border-[#242A27]">
-                  <div className="text-[10px] uppercase font-mono text-[#929A95]">NOx Abated</div>
-                  <div className="text-lg font-mono font-bold text-[#A8C83A] mt-1">↓ 28.6 kg/day</div>
-                  <div className="text-[10px] text-[#626A65] font-mono mt-0.5">Furnace F-101 Trim</div>
+                  <div className="text-[10px] uppercase font-mono text-[#929A95]">CO₂e Reduction</div>
+                  <div className="text-lg font-mono font-bold text-[#A8C83A] mt-0.5">↓ 14.2 t/day</div>
+                  <div className="text-[10px] text-[#626A65] font-mono mt-0.5">5,183 tCO₂e / year</div>
                 </div>
 
                 <div className="p-3 rounded-lg bg-[#080A09] border border-[#242A27]">
-                  <div className="text-[10px] uppercase font-mono text-[#929A95]">CO₂e Reduced</div>
-                  <div className="text-lg font-mono font-bold text-[#A8C83A] mt-1">↓ 14.2 t/day</div>
-                  <div className="text-[10px] text-[#626A65] font-mono mt-0.5">Annualized: 5,183 t/yr</div>
+                  <div className="text-[10px] uppercase font-mono text-[#929A95]">NOx Reduction</div>
+                  <div className="text-lg font-mono font-bold text-[#A8C83A] mt-0.5">↓ 28.6 kg/day</div>
+                  <div className="text-[10px] text-[#626A65] font-mono mt-0.5">Normalized to 88.5 mg</div>
                 </div>
 
                 <div className="p-3 rounded-lg bg-[#080A09] border border-[#242A27]">
-                  <div className="text-[10px] uppercase font-mono text-[#929A95]">Thermal Recovery</div>
-                  <div className="text-lg font-mono font-bold text-[#F1F3EE] mt-1">+2.45%</div>
-                  <div className="text-[10px] text-[#626A65] font-mono mt-0.5">Burner efficiency</div>
+                  <div className="text-[10px] uppercase font-mono text-[#929A95]">Cases Resolved</div>
+                  <div className="text-lg font-mono font-bold text-[#F1F3EE] mt-0.5">1 Resolved</div>
+                  <div className="text-[10px] text-[#626A65] font-mono mt-0.5">Case COMM-2026-00421</div>
                 </div>
 
                 <div className="p-3 rounded-lg bg-[#080A09] border border-[#242A27]">
-                  <div className="text-[10px] uppercase font-mono text-[#929A95]">Community Rewards</div>
-                  <div className="text-lg font-mono font-bold text-[#C4DF61] mt-1">+50 Points</div>
-                  <div className="text-[10px] text-[#626A65] font-mono mt-0.5">Verified citizen impact</div>
+                  <div className="text-[10px] uppercase font-mono text-[#929A95]">Efficiency Recovery</div>
+                  <div className="text-lg font-mono font-bold text-teal-400 mt-0.5">+2.45%</div>
+                  <div className="text-[10px] text-[#626A65] font-mono mt-0.5">Thermal optimization</div>
                 </div>
               </div>
 
-              <p className="text-[11px] text-[#929A95] mt-3 font-sans leading-relaxed">
-                Intervention on COMM-2026-00421 successfully normalized air quality breach with permanent CEMS verification.
+              <p className="text-[11px] text-[#929A95] mt-3 leading-relaxed">
+                Post-action measurement period confirmed stable NOx levels below the 100 mg/Nm³ pact threshold following Damper Trim 1.042.
               </p>
             </div>
 
             <div className="mt-4 pt-3 border-t border-[#242A27]">
-              {communityReports.length > 0 && (
-                <button
-                  onClick={() => {
-                    const target = communityReports.find((r) => r.id === 'COMM-2026-00421') || communityReports[0];
-                    setSelectedImpactReport(target?.environmental_impact_report || null);
-                  }}
-                  className="w-full py-2 px-3 rounded-lg bg-[#141817] hover:bg-[#1c221e] border border-[#A8C83A]/50 text-xs font-mono font-bold text-[#A8C83A] flex items-center justify-center gap-2 transition-all shadow-sm"
-                >
-                  <span>VIEW FINAL ENVIRONMENTAL IMPACT REPORT (COMM-2026-00421)</span>
-                  <ArrowRight size={13} />
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => {
+                  const target = communityReports.find((r) => r.id === 'COMM-2026-00421') || communityReports[0];
+                  setSelectedImpactReport(target?.environmental_impact_report || null);
+                }}
+                className="w-full py-2 px-3 rounded-lg bg-[#141817] hover:bg-[#1c221e] border border-[#A8C83A]/50 text-xs font-mono font-bold text-[#A8C83A] flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <FileCheck2 size={13} />
+                <span>INSPECT FULL ENVIRONMENTAL IMPACT REPORT (COMM-2026-00421)</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* ── 6. RECOMMENDATIONS & COMPACT ACTIONABLE ALERTS ────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* Top Recommendation Section */}
-          <div className="lg:col-span-6 p-5 rounded-xl bg-[#0E1110] border border-[#242A27] flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-[#929A95]">
-                  Priority Intervention
-                </span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141817] text-zinc-300 border border-[#242A27]">
-                  RANK #1 INTERVENTION
-                </span>
-              </div>
-
-              <div className="text-base font-semibold text-[#F1F3EE]">
-                {topRec?.name || 'Peak-Hour Load Shifting'}
-              </div>
-              <p className="text-xs text-[#929A95] mt-1 leading-relaxed font-sans">
-                {topRec?.description || 'Shift non-critical energy-intensive process runs outside peak tariff hours.'}
-              </p>
-
-              <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-[#242A27]">
-                <div className="p-2.5 rounded-lg bg-[#080A09] border border-[#242A27]">
-                  <div className="text-[10px] text-[#929A95] uppercase font-medium">CO₂ Cut</div>
-                  <div className="text-xs font-mono font-bold text-[#A8C83A] mt-0.5">
-                    -{topRec?.annual_co2_reduction_tonnes?.toFixed(1) || '63.6'} t/yr
-                  </div>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#080A09] border border-[#242A27]">
-                  <div className="text-[10px] text-[#929A95] uppercase font-medium">Annual Savings</div>
-                  <div className="text-xs font-mono font-bold text-[#F1F3EE] mt-0.5">
-                    ${Math.round(topRec?.annual_monetary_savings_usd || 139688).toLocaleString()}
-                  </div>
-                </div>
-                <div className="p-2.5 rounded-lg bg-[#080A09] border border-[#242A27]">
-                  <div className="text-[10px] text-[#929A95] uppercase font-medium">Payback</div>
-                  <div className="text-xs font-mono font-bold text-[#F1F3EE] mt-0.5">
-                    {topRec?.payback_years?.toFixed(1) || '0.2'} yrs
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-[#242A27] flex items-center justify-end">
-              <Link
-                href="/simulator"
-                className="px-3.5 py-1.5 rounded-lg bg-[#141817] hover:bg-[#1a221f] border border-[#242A27] text-xs font-medium text-zinc-200 hover:text-white transition-colors flex items-center gap-1.5"
-              >
-                <span>Launch Intervention Simulator</span>
-                <ArrowRight size={12} />
-              </Link>
-            </div>
-          </div>
-
-          {/* Compact Actionable Alerts */}
-          <div className="lg:col-span-6 p-5 rounded-xl bg-[#0E1110] border border-[#242A27]">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-[#929A95]">
-                Active Facility Alerts ({alerts.length})
-              </span>
-              <Link
-                href="/investigation"
-                className="text-xs font-medium text-[#929A95] hover:text-[#F1F3EE] transition-colors"
-              >
-                View all incidents →
-              </Link>
-            </div>
-
-            <div className="space-y-2">
-              {alerts.slice(0, 3).map((a: any) => (
-                <AlertBanner
-                  key={a.id}
-                  id={a.id}
-                  severity={a.severity}
-                  component={a.component}
-                  date={a.date}
-                  evidence={a.evidence}
-                  investigateHref={`/investigation?id=${a.id}`}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+        {/* ── 6. EVIDENCE TRUST LAYER DEMONSTRATION ────────────── */}
+        <EvidenceTrustLayer
+          reportId="COMM-2026-00421"
+          hasPhoto={true}
+          photoQuality="HIGH"
+          photoProvenance="UNKNOWN"
+          hasGps={true}
+          gpsAccuracyMeters={12}
+          facilityProximity="380m from Furnace F-101 Stack"
+          telemetryAnomalyDetected={true}
+          historicalDeviationDetected={true}
+          overallQuality="HIGH"
+        />
 
         {/* Environmental Impact Report Modal */}
         <EnvironmentalImpactReportModal

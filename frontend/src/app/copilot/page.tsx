@@ -82,15 +82,15 @@ export default function CopilotPage() {
     >
       <div className="space-y-6 max-w-4xl mx-auto">
         {/* ── CENTRAL ENVIRONMENTAL COGNITION CONSOLE ──────────── */}
-        <div className="p-6 rounded-xl bg-[#0e1310] border border-[#16201a] shadow-sm">
+        <div className="p-6 rounded-lg bg-[#0E1110] border border-[#242A27] shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Cpu size={15} className="text-zinc-400" />
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
+              <Cpu size={15} className="text-[#A8C83A]" />
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#F1F3EE]">
                 Environmental Intelligence Cognition
               </span>
             </div>
-            <span className="text-[11px] font-mono text-zinc-400">
+            <span className="text-[11px] font-mono text-[#929A95]">
               Deterministic Rules + LLM Reasoning
             </span>
           </div>
@@ -104,22 +104,22 @@ export default function CopilotPage() {
               onKeyDown={handleKeyDown}
               placeholder="Query ONER intelligence (e.g. 'Explain Furnace F-101 anomaly and recommended trim')..."
               disabled={loading}
-              className="w-full px-4 py-3 pl-10 pr-24 rounded-lg bg-[#090c0a] border border-[#18231b] focus:border-[#2a3c2f] focus:outline-none text-sm text-zinc-100 placeholder-zinc-500 font-sans transition-colors"
+              className="w-full px-4 py-3 pl-10 pr-24 rounded-md bg-[#080A09] border border-[#242A27] focus:border-[#A8C83A] focus:outline-none text-sm text-[#F1F3EE] placeholder-[#626A65] font-sans transition-colors"
             />
-            <Search size={15} className="absolute left-3.5 top-3.5 text-zinc-500" />
+            <Search size={15} className="absolute left-3.5 top-3.5 text-[#626A65]" />
             <button
               onClick={() => executeQuery(input)}
               disabled={loading || !input.trim()}
-              className="absolute right-2 top-2 px-3 py-1.5 rounded-md bg-[#142219] hover:bg-[#1a2d21] disabled:opacity-40 border border-[#213829] text-xs font-semibold text-zinc-100 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+              className="absolute right-2 top-2 px-3 py-1.5 rounded bg-[#141817] hover:bg-[#202724] disabled:opacity-40 border border-[#242A27] text-xs font-semibold text-[#F1F3EE] hover:text-[#C4DF61] transition-colors flex items-center gap-1 cursor-pointer"
             >
               <span>{loading ? 'Evaluating...' : 'Query'}</span>
-              <CornerDownLeft size={12} className="text-emerald-400" />
+              <CornerDownLeft size={12} className="text-[#A8C83A]" />
             </button>
           </div>
 
           {/* Quick Telemetry Probes */}
-          <div className="mt-4 pt-3 border-t border-[#141b16]">
-            <div className="text-[10px] uppercase font-semibold text-zinc-400 tracking-wider mb-2">
+          <div className="mt-4 pt-3 border-t border-[#242A27]">
+            <div className="text-[10px] uppercase font-semibold text-[#929A95] tracking-wider mb-2">
               Suggested Inquiries:
             </div>
             <div className="flex flex-wrap gap-2">
@@ -127,7 +127,7 @@ export default function CopilotPage() {
                 <button
                   key={p.label}
                   onClick={() => executeQuery(p.query)}
-                  className="px-2.5 py-1 rounded-md bg-[#090c0a] hover:bg-[#111713] border border-[#162018] hover:border-[#223026] text-xs font-medium text-zinc-300 hover:text-zinc-100 transition-colors text-left cursor-pointer"
+                  className="px-2.5 py-1 rounded bg-[#080A09] hover:bg-[#141817] border border-[#242A27] hover:border-[#A8C83A]/40 text-xs font-medium text-[#929A95] hover:text-[#F1F3EE] transition-colors text-left cursor-pointer"
                 >
                   {p.label}
                 </button>
@@ -138,83 +138,83 @@ export default function CopilotPage() {
 
         {/* ── STRUCTURED INTELLIGENCE RESULTS ──────────────────── */}
         {results.length === 0 ? (
-          <div className="p-10 rounded-xl bg-[#0e1310] border border-[#16201a] text-center">
-            <Layers size={24} className="text-zinc-600 mx-auto mb-2" />
-            <div className="text-sm font-semibold text-zinc-300">
+          <div className="p-10 rounded-lg bg-[#0E1110] border border-[#242A27] text-center">
+            <Layers size={24} className="text-[#626A65] mx-auto mb-2" />
+            <div className="text-sm font-semibold text-[#F1F3EE]">
               Query ONER Environmental Intelligence
             </div>
-            <p className="text-xs text-zinc-500 mt-1 max-w-md mx-auto font-sans leading-relaxed">
+            <p className="text-xs text-[#929A95] mt-1 max-w-md mx-auto font-sans leading-relaxed">
               Ask about active anomaly causality, Scope 1 and 2 carbon drift, intervention payback simulations, or ISO 14064 MRV audit readiness.
             </p>
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {results.map((res, i) => (
               <div
                 key={i}
-                className="p-6 rounded-xl bg-[#0e1310] border border-[#16201a] space-y-4 shadow-sm"
+                className="p-6 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-4 shadow-sm"
               >
                 {/* Query Header */}
-                <div className="flex items-center justify-between border-b border-[#141b16] pb-3">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <div className="flex items-center justify-between border-b border-[#242A27] pb-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#F1F3EE]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#A8C83A]" />
                     <span>Inquiry: &ldquo;{res.query}&rdquo;</span>
                   </div>
-                  <span className="text-[10px] font-mono text-zinc-400">{res.timestamp}</span>
+                  <span className="text-[10px] font-mono text-[#929A95]">{res.timestamp}</span>
                 </div>
 
                 {/* 1. ANSWER */}
                 <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-[#929A95] mb-1">
                     1. ANSWER
                   </div>
-                  <p className="text-sm text-zinc-200 leading-relaxed font-sans">
+                  <p className="text-sm text-[#F1F3EE] leading-relaxed font-sans">
                     {res.response}
                   </p>
                 </div>
 
                 {/* 2. EVIDENCE */}
-                <div className="p-3.5 rounded-lg bg-[#0b0f0c] border border-[#141b16]">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">
+                <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27]">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-[#929A95] mb-1">
                     2. EVIDENCE
                   </div>
-                  <div className="text-xs text-zinc-300 font-sans leading-relaxed">
+                  <div className="text-xs text-[#929A95] font-sans leading-relaxed">
                     Combustion temperature deviation (+18.4°C), NOx stack surge (+157.9%), PM2.5 elevation (+117.5%) with gas fuel regulation drift.
                   </div>
                 </div>
 
                 {/* 3. SIGNALS */}
-                <div className="p-3.5 rounded-lg bg-[#0b0f0c] border border-[#141b16]">
-                  <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">
+                <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27]">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-[#929A95] mb-1">
                     3. SIGNALS & PHYSICAL SOURCE
                   </div>
-                  <div className="text-xs text-zinc-300 font-mono">
+                  <div className="text-xs text-[#929A95] font-mono">
                     Combustion Train 04 · Furnace F-101 Burner Assembly · Gas Manifold Plenum 4B
                   </div>
                 </div>
 
                 {/* 4. CONFIDENCE & 5. ACTION */}
-                <div className="p-3.5 rounded-lg bg-[#0d1410] border border-[#18261e] flex items-center justify-between flex-wrap gap-3">
+                <div className="p-3.5 rounded bg-[#141817] border border-[#242A27] flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 size={15} className="text-emerald-400" />
-                    <span className="text-xs text-zinc-300">
-                      4. CONFIDENCE: <strong className="text-emerald-400 font-semibold font-mono">99.4%</strong> (Deterministic Causal Engine)
+                    <CheckCircle2 size={15} className="text-[#A8C83A]" />
+                    <span className="text-xs text-[#929A95]">
+                      4. ROOT-CAUSE CONFIDENCE: <strong className="text-[#A8C83A] font-semibold font-mono">99.4%</strong> (Deterministic Causal Engine)
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <Link
                       href="/investigation"
-                      className="px-3 py-1.5 rounded-md bg-[#121a15] hover:bg-[#18231c] border border-[#1b2720] text-xs font-medium text-zinc-200 hover:text-white transition-colors"
+                      className="px-3 py-1.5 rounded bg-[#080A09] hover:bg-[#141817] border border-[#242A27] text-xs font-medium text-[#F1F3EE] hover:text-[#C4DF61] transition-colors"
                     >
                       5. View Investigation
                     </Link>
                     <Link
                       href="/simulator"
-                      className="px-3 py-1.5 rounded-md bg-[#142219] hover:bg-[#1a2d21] border border-[#213829] text-xs font-semibold text-zinc-100 hover:text-white transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 rounded bg-[#141817] hover:bg-[#202724] border border-[#242A27] text-xs font-semibold text-[#F1F3EE] hover:text-[#C4DF61] transition-colors flex items-center gap-1"
                     >
                       <span>Simulate Action</span>
-                      <ArrowRight size={12} className="text-emerald-400" />
+                      <ArrowRight size={12} className="text-[#A8C83A]" />
                     </Link>
                   </div>
                 </div>

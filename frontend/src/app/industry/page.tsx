@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import AppLayout from '@/components/AppLayout';
 import {
   Factory,
   ShieldCheck,
@@ -14,9 +15,14 @@ import {
   Play,
   Check,
   Info,
+  TrendingDown,
+  Activity,
+  AlertTriangle,
 } from 'lucide-react';
 import { api, CommunityReport, EnvironmentalPact } from '@/lib/api';
+import EnvironmentalImpactReport from '@/components/EnvironmentalImpactReport';
 import EnvironmentalImpactReportModal from '@/components/EnvironmentalImpactReportModal';
+import EvidenceTrustLayer from '@/components/EvidenceTrustLayer';
 
 function IndustryPortalContent() {
   const searchParams = useSearchParams();
@@ -28,27 +34,32 @@ function IndustryPortalContent() {
   const [simulationActive, setSimulationActive] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [showImpactModal, setShowImpactModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadData = async () => {
+    setIsRefreshing(true);
+    try {
+      const [pactRes, casesRes] = await Promise.all([
+        api.getPact(),
+        api.getIndustryCases(),
+      ]);
+      setPact(pactRes);
+      setCases(casesRes.cases || []);
+
+      if (initialCaseId) {
+        const match = casesRes.cases?.find((c: CommunityReport) => c.id === initialCaseId);
+        if (match) setSelectedCase(match);
+      } else if (casesRes.cases?.length > 0) {
+        setSelectedCase((prev) => prev || casesRes.cases[0]);
+      }
+    } catch (err) {
+      console.error('Failed to load industry data:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        const [pactRes, casesRes] = await Promise.all([
-          api.getPact(),
-          api.getIndustryCases(),
-        ]);
-        setPact(pactRes);
-        setCases(casesRes.cases || []);
-
-        if (initialCaseId) {
-          const match = casesRes.cases?.find((c: CommunityReport) => c.id === initialCaseId);
-          if (match) setSelectedCase(match);
-        } else if (casesRes.cases?.length > 0) {
-          setSelectedCase(casesRes.cases[0]);
-        }
-      } catch (err) {
-        console.error('Failed to load industry data:', err);
-      }
-    }
     loadData();
   }, [initialCaseId]);
 
@@ -64,7 +75,6 @@ function IndustryPortalContent() {
         'M. Rao (Chief Combustion Engineer)'
       );
 
-      // Update state
       setSelectedCase(updated);
       setCases((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
     } catch (err) {
@@ -74,405 +84,404 @@ function IndustryPortalContent() {
     }
   };
 
+  const isResolved = selectedCase?.status === 'RESOLVED';
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12 text-[#F2F3EF]">
-      {/* ── Page Header ────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#202525]">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-[#121515] border border-[#202525] text-xs font-medium text-teal-400 mb-2">
-            <Factory size={14} />
-            <span>Industrial Operations & Accountability Workspace</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#F2F3EF]">
-              Orion Refining Complex
-            </h1>
-            <span className="text-xs font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 font-semibold">
-              COMPLIANCE: AT RISK
-            </span>
-            <span className="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-semibold">
-              PACT: ACTIVE
-            </span>
-          </div>
-          <p className="text-xs text-[#8D9490] mt-1 max-w-2xl">
-            Correlated community incident dispatch, continuous emissions pact tracking, and model-predictive setpoint intervention.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Link
-            href="/simulator"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#121515] hover:bg-[#181d1b] border border-[#202525] text-xs text-zinc-300 transition-colors"
-          >
-            <SlidersHorizontal size={13} />
-            <span>Full Simulator</span>
-          </Link>
-          <Link
-            href="/carbon"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#121515] hover:bg-[#181d1b] border border-[#202525] text-xs text-zinc-300 transition-colors"
-          >
-            <FileCheck2 size={13} />
-            <span>MRV Audit</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* ── Section 1: The Environmental Pact Dashboard ─────────── */}
-      {pact && (
-        <div className="rounded-lg bg-[#0D0F0F] border border-[#202525] p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#202525]">
+    <AppLayout
+      title="Facility Operations"
+      subtitle="Orion Refining Complex · Industrial Environmental Workspace"
+      onRefresh={loadData}
+      isRefreshing={isRefreshing}
+    >
+      <div className="space-y-6 max-w-7xl mx-auto pb-12 text-[#F1F3EE]">
+        {/* ── 1. FACILITY ENVIRONMENTAL PERFORMANCE (Section 21) ── */}
+        <div className="p-5 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#242A27]">
+            <div>
+              <div className="text-[10px] font-mono text-[#A8C83A] uppercase font-bold tracking-wider">
+                FACILITY ENVIRONMENTAL PERFORMANCE &bull; ORION REFINING COMPLEX
+              </div>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#F1F3EE] mt-0.5">
+                Operational Environmental Dashboard
+              </h1>
+            </div>
             <div className="flex items-center gap-2">
-              <ShieldCheck size={18} className="text-[#B7D83D]" />
-              <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                  Tripartite Environmental Pact (Clause 4.2 Accountability Framework)
-                </span>
-                <div className="text-[10px] text-zinc-500 font-mono">
-                  Signatories: Orion Energy • Pollution Control Board • Sector 4 Civic Committee
-                </div>
-              </div>
-            </div>
-
-            {/* Financial Model Callout */}
-            <div className="flex items-center gap-4 text-xs font-mono">
-              <div>
-                <span className="text-[9px] uppercase font-sans text-amber-500/90 block">Potential Excess Penalty</span>
-                <span className="text-amber-400 font-bold">
-                  ₹{pact.illustrative_financial_model.excess_penalty_monthly_inr.toLocaleString()} / mo
-                </span>
-              </div>
-              <div className="border-l border-[#202525] pl-4">
-                <span className="text-[9px] uppercase font-sans text-emerald-400 block">Compliance + Efficiency Upside</span>
-                <span className="text-emerald-400 font-bold">
-                  ₹{pact.illustrative_financial_model.net_monthly_opportunity_inr.toLocaleString()} / mo
-                </span>
-              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30 font-bold">
+                COMPLIANCE: AT RISK
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-bold">
+                PACT: ACTIVE
+              </span>
             </div>
           </div>
 
-          {/* Monitored Parameters Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-            {pact.monitored_parameters.map((param) => {
-              const isBreach = param.status === 'BREACH';
-              const isWarning = param.status === 'WARNING';
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Environmental Health */}
+            <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27]">
+              <div className="text-[10px] uppercase font-sans text-[#929A95]">Environmental Health</div>
+              <div className="text-2xl font-mono font-bold text-[#A8C83A] mt-1">87.3</div>
+              <div className="text-[10px] text-[#626A65] font-mono mt-0.5">Out of 100 max</div>
+            </div>
 
-              return (
-                <div
-                  key={param.code}
-                  className={`p-2.5 rounded border ${
-                    isBreach
-                      ? 'bg-red-950/20 border-red-500/40 text-red-300'
-                      : isWarning
-                      ? 'bg-amber-950/20 border-amber-500/40 text-amber-300'
-                      : 'bg-[#080909] border-[#202525] text-zinc-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-[10px] font-sans">
-                    <span className="font-semibold">{param.code}</span>
-                    <span
-                      className={`text-[8px] font-mono px-1 rounded ${
-                        isBreach ? 'bg-red-500/20 text-red-300' : isWarning ? 'bg-amber-500/20 text-amber-300' : 'text-zinc-500'
-                      }`}
-                    >
-                      {param.status}
-                    </span>
-                  </div>
-                  <div className="font-mono text-base font-bold mt-1 text-zinc-100">
-                    {param.current}
-                  </div>
-                  <div className="flex items-center justify-between text-[9px] font-mono text-zinc-500 mt-0.5">
-                    <span>Limit: {param.threshold}</span>
-                    <span className={param.excess_pct > 0 ? 'text-amber-400' : 'text-emerald-400'}>
-                      {param.excess_pct > 0 ? `+${param.excess_pct}%` : `${param.excess_pct}%`}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            {/* Compliance */}
+            <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27]">
+              <div className="text-[10px] uppercase font-sans text-[#929A95]">Compliance State</div>
+              <div className="text-xl font-mono font-bold text-amber-400 mt-1">AT RISK</div>
+              <div className="text-[10px] text-[#626A65] font-mono mt-0.5">NOx +31.4% (Stack 4B)</div>
+            </div>
 
-          <div className="text-[10px] text-zinc-500 font-mono italic">
-            * {pact.illustrative_financial_model.note}
-          </div>
-        </div>
-      )}
+            {/* CO₂e Reduction */}
+            <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27]">
+              <div className="text-[10px] uppercase font-sans text-[#929A95]">CO₂e Reduction</div>
+              <div className="text-xl font-mono font-bold text-emerald-400 mt-1">↓ 14.2 t/day</div>
+              <div className="text-[10px] text-[#626A65] font-mono mt-0.5">5,183 t/year annualized</div>
+            </div>
 
-      {/* ── Section 2: Open Community Cases & Investigation ─────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Community Case Queue (4 cols) */}
-        <div className="lg:col-span-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-zinc-200">
-              Community Incident Queue ({cases.filter((c) => c.status !== 'RESOLVED').length} Active)
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            {cases.map((c) => {
-              const isSelected = selectedCase?.id === c.id;
-              const isResolved = c.status === 'RESOLVED';
-
-              return (
-                <div
-                  key={c.id}
-                  onClick={() => {
-                    setSelectedCase(c);
-                    setSimulationActive(false);
-                  }}
-                  className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                    isSelected
-                      ? 'bg-[#151c17] border-[#B7D83D]/60 shadow-sm'
-                      : 'bg-[#0D0F0F] hover:bg-[#121515] border-[#202525]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="font-mono text-[11px] font-semibold text-zinc-300">{c.id}</span>
-                    <span
-                      className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
-                        isResolved
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/25'
-                      }`}
-                    >
-                      {c.status.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <div className="text-xs font-medium text-zinc-200 line-clamp-1">{c.title}</div>
-                  <div className="text-[10px] text-zinc-500 font-mono mt-1 flex items-center justify-between">
-                    <span>{c.timestamp_formatted}</span>
-                    <span className="text-emerald-400">{c.corroboration_score}% match</span>
-                  </div>
-                </div>
-              );
-            })}
+            {/* Energy Savings */}
+            <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27]">
+              <div className="text-[10px] uppercase font-sans text-[#929A95]">Thermal / Energy Recovery</div>
+              <div className="text-xl font-mono font-bold text-teal-400 mt-1">+2.45%</div>
+              <div className="text-[10px] text-[#626A65] font-mono mt-0.5">Stoichiometric balance</div>
+            </div>
           </div>
         </div>
 
-        {/* Right: Selected Case Dossier & Intervention Actions (8 cols) */}
-        <div className="lg:col-span-8 space-y-4">
-          {selectedCase ? (
-            <div className="rounded-lg bg-[#0D0F0F] border border-[#202525] p-5 space-y-5">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#202525]">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-mono font-bold text-[#F2F3EF]">{selectedCase.id}</span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                      CORROBORATED: {selectedCase.corroboration_score}%
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-zinc-200 mt-1">{selectedCase.title}</h3>
-                  <div className="text-[10px] text-zinc-500 font-mono mt-0.5">
-                    Location: {selectedCase.location_name} ({selectedCase.latitude}°N, {selectedCase.longitude}°E)
-                  </div>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-[10px] text-zinc-400 font-mono">Assigned Engineer</div>
-                  <div className="text-xs font-semibold text-zinc-200 mt-0.5">
-                    {selectedCase.industry_response.engineer || 'Unassigned'}
-                  </div>
-                </div>
+        {/* ── Tripartite Pact Parameters Strip ─────────────────── */}
+        {pact && (
+          <div id="pact" className="p-4 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-3">
+            <div className="flex items-center justify-between text-xs pb-2 border-b border-[#181E1C]">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={16} className="text-[#A8C83A]" />
+                <span className="font-bold text-zinc-200 uppercase font-sans text-xs">
+                  Tripartite Environmental Pact (Clause 4.2 Framework)
+                </span>
               </div>
+              <div className="text-[10px] font-mono text-[#929A95]">
+                Monthly Penalty Accrual: <strong className="text-amber-400">₹{pact.illustrative_financial_model.excess_penalty_monthly_inr.toLocaleString()}</strong>
+              </div>
+            </div>
 
-              {/* Citizen Evidence & Telemetry Correlation Strip */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                {/* Left: Citizen Evidence Card */}
-                <div className="p-3.5 rounded bg-[#080909] border border-[#202525] space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-sans text-zinc-400 font-semibold">
-                      Citizen Evidence Stamp
-                    </span>
-                    <span className="text-[9px] font-mono text-[#B7D83D]">GPS AUTHENTICATED</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+              {pact.monitored_parameters.map((p) => {
+                const isBreach = p.status === 'BREACH';
+                const isWarning = p.status === 'WARNING';
+                return (
+                  <div
+                    key={p.code}
+                    className={`p-2 rounded border text-xs ${
+                      isBreach
+                        ? 'bg-red-500/10 border-red-500/30 text-red-300'
+                        : isWarning
+                        ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                        : 'bg-[#080A09] border-[#242A27] text-zinc-300'
+                    }`}
+                  >
+                    <div className="flex justify-between text-[10px]">
+                      <span className="font-bold">{p.code}</span>
+                      <span className="font-mono text-[9px]">{p.status}</span>
+                    </div>
+                    <div className="font-mono font-bold text-sm mt-1">{p.current}</div>
+                    <div className="text-[9px] text-zinc-400 font-mono mt-0.5">Limit: {p.threshold}</div>
                   </div>
-                  <div className="aspect-[16/9] rounded overflow-hidden bg-black/60 border border-[#1b251e] flex items-center justify-center p-2 text-center text-zinc-400 text-[10px]">
-                    <div className="space-y-1">
-                      <div className="font-mono text-zinc-300 font-bold">CASE: {selectedCase.id}</div>
-                      <div>GPS: {selectedCase.latitude}°N, {selectedCase.longitude}°E</div>
-                      <div>TIMESTAMP: {selectedCase.timestamp_formatted}</div>
-                      <div className="text-emerald-400 font-mono">OPTICAL DENSITY DEVIATION DETECTED</div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── 2. COMMUNITY CASE (Evidence · Corroboration · Root Cause) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+          {/* Case Selector (4 cols) */}
+          <div className="lg:col-span-4 p-4 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
+                Community Incident Queue
+              </span>
+              <span className="text-[10px] font-mono text-[#A8C83A]">
+                {cases.length} INCIDENTS
+              </span>
+            </div>
+
+            <div className="space-y-2">
+              {cases.map((c) => {
+                const isSelected = selectedCase?.id === c.id;
+                return (
+                  <div
+                    key={c.id}
+                    onClick={() => {
+                      setSelectedCase(c);
+                      setSimulationActive(false);
+                    }}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                      isSelected
+                        ? 'bg-[#141817] border-[#A8C83A]/60 shadow-sm'
+                        : 'bg-[#080A09] hover:bg-[#121515] border-[#242A27]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="font-mono font-bold text-zinc-200">{c.id}</span>
+                      <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/30">
+                        {c.corroboration_score}% MATCH
+                      </span>
+                    </div>
+                    <div className="text-xs font-medium text-zinc-300 truncate">{c.title}</div>
+                    <div className="text-[10px] text-[#929A95] font-mono mt-1 flex justify-between">
+                      <span>{c.category}</span>
+                      <span>{c.status}</span>
                     </div>
                   </div>
-                  <p className="text-[11px] text-zinc-300 italic">&quot;{selectedCase.description}&quot;</p>
-                </div>
+                );
+              })}
+            </div>
+          </div>
 
-                {/* Right: Plant Telemetry & Diagnostic Root Cause */}
-                <div className="p-3.5 rounded bg-[#080909] border border-[#202525] space-y-2">
-                  <span className="text-[10px] uppercase font-sans text-zinc-400 font-semibold block">
-                    Plant Telemetry & Anomaly Analysis
-                  </span>
-                  <div className="p-2 rounded bg-[#0D0F0F] border border-[#1c241f] space-y-1 font-mono text-[11px]">
-                    <div className="text-zinc-400 font-sans text-[10px]">Correlated Deviations:</div>
-                    {Object.entries(selectedCase.telemetry_deviations).map(([k, v]) => (
-                      <div key={k} className="flex justify-between">
-                        <span className="text-zinc-500 uppercase">{k}:</span>
-                        <span className="text-amber-400 font-bold">{v}</span>
-                      </div>
-                    ))}
-                  </div>
-
+          {/* Selected Case Intelligence Dossier (8 cols) */}
+          <div className="lg:col-span-8 p-5 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-4">
+            {selectedCase ? (
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#242A27]">
                   <div>
-                    <span className="text-[10px] uppercase font-sans text-zinc-500 block">Likely Source</span>
-                    <div className="text-xs font-semibold text-zinc-200">{selectedCase.likely_source}</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-mono font-bold text-[#A8C83A]">{selectedCase.id}</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                        CORROBORATION SCORE: {selectedCase.corroboration_score}%
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-bold text-[#F1F3EE] mt-1">{selectedCase.title}</h3>
                   </div>
 
-                  <div>
-                    <span className="text-[10px] uppercase font-sans text-zinc-500 block">Root Cause Diagnosis</span>
-                    <div className="text-[11px] text-zinc-300">{selectedCase.root_cause}</div>
+                  <div className="text-right text-xs">
+                    <span className="text-[10px] text-[#929A95] uppercase font-sans">Assigned Engineer</span>
+                    <div className="font-mono text-zinc-200">{selectedCase.industry_response.engineer || 'M. Rao'}</div>
                   </div>
                 </div>
-              </div>
 
-              {/* ── Intervention Simulation Comparison (Do Nothing vs Intervention) ── */}
-              {simulationActive && (
-                <div className="p-4 rounded-lg bg-[#0e1611] border border-[#1e3022] space-y-3">
+                {/* Evidence & Root Cause Breakdown */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                  {/* Evidence Summary */}
+                  <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-2">
+                    <div className="text-[10px] uppercase font-sans font-bold text-zinc-400">
+                      Community Evidence
+                    </div>
+                    <p className="text-[11px] text-zinc-300 italic">
+                      &quot;{selectedCase.description}&quot;
+                    </p>
+                    <div className="space-y-1 font-mono text-[10px] text-[#929A95] pt-1 border-t border-[#181E1C]">
+                      <div>Location: {selectedCase.location_name}</div>
+                      <div>Timestamp: {selectedCase.timestamp_formatted}</div>
+                      <div>GPS Precision: ±{selectedCase.accuracy_meters}m</div>
+                    </div>
+                  </div>
+
+                  {/* Root Cause Diagnosis */}
+                  <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-2">
+                    <div className="text-[10px] uppercase font-sans font-bold text-amber-400">
+                      ONER Diagnostic Root Cause
+                    </div>
+                    <div className="text-[11px] text-zinc-200 font-medium">
+                      {selectedCase.root_cause}
+                    </div>
+                    <div className="space-y-1 font-mono text-[10px] pt-1 border-t border-[#181E1C]">
+                      <div className="text-[#929A95] font-sans">Correlated Deviations:</div>
+                      {Object.entries(selectedCase.telemetry_deviations).map(([k, v]) => (
+                        <div key={k} className="flex justify-between">
+                          <span className="text-zinc-500 uppercase">{k}:</span>
+                          <span className="text-amber-400 font-bold">{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Evidence Trust Layer for the Case */}
+                <EvidenceTrustLayer
+                  reportId={selectedCase.id}
+                  hasPhoto={true}
+                  photoQuality="HIGH"
+                  hasGps={true}
+                  facilityProximity="380m from Furnace Stack"
+                  overallQuality="HIGH"
+                />
+
+                {/* ── 3. ENGINEERING RESPONSE (Section 21) ───────── */}
+                <div className="p-4 rounded-lg bg-[#080A09] border border-[#242A27] space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
-                      <Zap size={14} />
-                      Model-Predictive Intervention Simulation
-                    </span>
-                    <span className="text-[10px] font-mono text-zinc-400">Damper Trim 1.042 Model</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-                    <div className="p-3 rounded bg-[#080909] border border-[#202525] space-y-1">
-                      <div className="text-[10px] uppercase font-sans text-zinc-500 font-semibold">Scenario: Do Nothing</div>
-                      <div className="text-red-400 font-bold">NOx: 131.4 mg/Nm³ (+31.4% excess)</div>
-                      <div className="text-zinc-400">Potential penalty: ₹4,85,000 / mo</div>
-                      <div className="text-zinc-500">Unburnt fuel loss: ₹8,20,000 / mo</div>
-                    </div>
-
-                    <div className="p-3 rounded bg-[#101a13] border border-[#1f3323] space-y-1">
-                      <div className="text-[10px] uppercase font-sans text-emerald-400 font-semibold">
-                        Scenario: ONER Damper Trim (1.042)
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-wider text-zinc-200">
+                        Engineering Response
                       </div>
-                      <div className="text-emerald-400 font-bold">NOx: 88.5 mg/Nm³ (-28.6 kg/day drop)</div>
-                      <div className="text-zinc-300">CO2 Abated: 14.2 tonnes/day</div>
-                      <div className="text-emerald-300">Pact Compliance Incentive Unlocked</div>
+                      <div className="text-[10px] text-[#929A95]">
+                        Recommended Action: <strong className="text-zinc-200">{selectedCase.recommended_action}</strong>
+                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* ── Industrial Action Buttons ───────────────────────── */}
-              <div className="pt-2 border-t border-[#202525] flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleAction('ACKNOWLEDGE')}
-                  disabled={actionLoading || selectedCase.status !== 'TRIAGING'}
-                  className="px-3 py-1.5 rounded bg-[#121515] hover:bg-[#181d1b] border border-[#202525] text-xs font-medium text-zinc-200 transition-colors disabled:opacity-40"
-                >
-                  {selectedCase.status === 'TRIAGING' ? 'Acknowledge Case' : '✓ Acknowledged'}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSimulationActive(!simulationActive)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium border transition-colors ${
-                    simulationActive
-                      ? 'bg-[#1b271d] text-[#B7D83D] border-[#B7D83D]/40'
-                      : 'bg-[#121515] text-zinc-300 border-[#202525] hover:bg-[#181d1b]'
-                  }`}
-                >
-                  <Play size={12} />
-                  <span>{simulationActive ? 'Hide Simulation' : 'Run Intervention Sim'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleAction(
-                      'CORRECTIVE_ACTION',
-                      'Damper trim recalibrated to 1.042; O2 trim loop reset. Work order dispatched.'
-                    )
-                  }
-                  disabled={actionLoading || selectedCase.status === 'RESOLVED'}
-                  className="px-3.5 py-1.5 rounded bg-[#152218] hover:bg-[#1a2c1f] border border-[#B7D83D]/50 text-xs font-semibold text-white transition-all disabled:opacity-40"
-                >
-                  Apply Damper Trim (1.042)
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    handleAction(
-                      'RESOLVE',
-                      'CEMS confirmation: NOx normalized to 88.5 mg/Nm³. Thermal balance restored.'
-                    )
-                  }
-                  disabled={actionLoading || selectedCase.status === 'RESOLVED'}
-                  className="ml-auto px-4 py-1.5 rounded bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/50 text-xs font-bold text-emerald-300 transition-all disabled:opacity-40 flex items-center gap-1.5"
-                >
-                  <Check size={13} />
-                  <span>{selectedCase.status === 'RESOLVED' ? 'Case Resolved' : 'Mark Resolved'}</span>
-                </button>
-              </div>
-
-              {/* ── Environmental Performance Result (Comply, Optimize, Save) ── */}
-              <div className="p-4 rounded-lg bg-[#080A09] border border-[#242A27] space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 size={16} className="text-emerald-400" />
-                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                      Environmental Performance Result
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141817] text-zinc-300 border border-[#242A27]">
+                      STATUS: {selectedCase.industry_response.status}
                     </span>
                   </div>
-                  {selectedCase.environmental_impact_report && (
+
+                  {/* Simulation Toggle */}
+                  {simulationActive && (
+                    <div className="p-3 rounded bg-[#0E1110] border border-[#A8C83A]/30 space-y-2 text-xs font-mono">
+                      <div className="text-[10px] uppercase font-sans font-bold text-[#A8C83A]">
+                        Intervention Simulation Model (Damper Trim 1.042)
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-2 rounded bg-[#080A09] border border-red-500/20">
+                          <div className="text-zinc-400 font-sans text-[10px]">Do Nothing Baseline</div>
+                          <div className="text-red-400 font-bold mt-1">NOx: 131.4 mg/Nm³ (+31.4%)</div>
+                          <div className="text-zinc-500 text-[10px]">Penalty risk: ₹4,85,000/mo</div>
+                        </div>
+                        <div className="p-2 rounded bg-[#080A09] border border-emerald-500/20">
+                          <div className="text-zinc-400 font-sans text-[10px]">With Damper Trim 1.042</div>
+                          <div className="text-emerald-400 font-bold mt-1">NOx: 88.5 mg/Nm³ (-28.6 kg/d)</div>
+                          <div className="text-emerald-400 text-[10px]">CO₂e drop: 14.2 t/day</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Actions Row */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#181E1C]">
                     <button
                       type="button"
-                      onClick={() => setShowImpactModal(true)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#141817] hover:bg-[#1a201e] border border-[#242A27] text-xs font-semibold text-[#A8C83A] transition-colors"
+                      onClick={() => handleAction('ACKNOWLEDGE')}
+                      disabled={actionLoading || selectedCase.status !== 'TRIAGING'}
+                      className="px-3 py-1.5 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#242A27] text-xs font-medium text-zinc-300 transition-colors disabled:opacity-40 cursor-pointer"
                     >
-                      <FileCheck2 size={13} />
-                      <span>View Environmental Impact Report (MRV)</span>
+                      {selectedCase.status === 'TRIAGING' ? 'Acknowledge Case' : '✓ Acknowledged'}
                     </button>
-                  )}
+
+                    <button
+                      type="button"
+                      onClick={() => setSimulationActive(!simulationActive)}
+                      className="px-3 py-1.5 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#242A27] text-xs font-medium text-zinc-300 transition-colors cursor-pointer"
+                    >
+                      {simulationActive ? 'Hide Simulation' : 'Run Intervention Sim'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleAction(
+                          'CORRECTIVE_ACTION',
+                          'Executing damper trim recalibration to 1.042. Air-fuel stoichiometric loop normalized.'
+                        )
+                      }
+                      disabled={actionLoading || isResolved}
+                      className="px-3.5 py-1.5 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#A8C83A]/50 text-xs font-mono font-bold text-[#A8C83A] transition-colors disabled:opacity-40 cursor-pointer"
+                    >
+                      Apply Damper Trim (1.042)
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleAction(
+                          'RESOLVE',
+                          'Combustion setpoint normalized. CEMS confirms NOx returned to 88.5 mg/Nm³.'
+                        )
+                      }
+                      disabled={actionLoading || isResolved}
+                      className="ml-auto px-4 py-1.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-mono font-bold text-emerald-300 transition-colors disabled:opacity-40 cursor-pointer"
+                    >
+                      {isResolved ? '✓ Case Resolved' : 'Mark Resolved & Verify'}
+                    </button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono text-xs">
-                  <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27]">
-                    <div className="text-[9px] uppercase font-sans text-zinc-500">NOx Reduction</div>
-                    <div className="text-sm font-bold text-emerald-400 mt-0.5">-28.6 kg/day</div>
-                    <div className="text-[9px] text-zinc-500 font-sans">Stack CEMS verified</div>
+                {/* ── 4. MEASURED RESULT (Before · After · Reduction) ── */}
+                <div className="p-4 rounded-lg bg-[#080A09] border border-[#242A27] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
+                      Measured Result & Telemetry Comparison
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400">
+                      CEMS VERIFIED
+                    </span>
                   </div>
 
-                  <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27]">
-                    <div className="text-[9px] uppercase font-sans text-zinc-500">CO₂e Abatement</div>
-                    <div className="text-sm font-bold text-[#A8C83A] mt-0.5">-14.2 t/day</div>
-                    <div className="text-[9px] text-zinc-500 font-sans">5,183 t/year annualized</div>
-                  </div>
+                  <div className="grid grid-cols-3 gap-2 font-mono text-xs">
+                    <div className="p-2.5 rounded bg-[#0E1110] border border-red-500/20">
+                      <div className="text-[9px] uppercase font-sans text-zinc-500">Before</div>
+                      <div className="text-sm font-bold text-red-400 mt-0.5">131.4 mg/Nm³</div>
+                      <div className="text-[9px] text-zinc-500 font-sans">NOx breach (+31.4%)</div>
+                    </div>
 
-                  <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27]">
-                    <div className="text-[9px] uppercase font-sans text-zinc-500">Thermal Efficiency</div>
-                    <div className="text-sm font-bold text-teal-400 mt-0.5">+2.45% recovery</div>
-                    <div className="text-[9px] text-zinc-500 font-sans">Fuel loss mitigated</div>
-                  </div>
+                    <div className="p-2.5 rounded bg-[#0E1110] border border-[#A8C83A]/30">
+                      <div className="text-[9px] uppercase font-sans text-zinc-500">Action</div>
+                      <div className="text-sm font-bold text-[#A8C83A] mt-0.5">Trim 1.042</div>
+                      <div className="text-[9px] text-zinc-500 font-sans">Stoichiometric reset</div>
+                    </div>
 
-                  <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27]">
-                    <div className="text-[9px] uppercase font-sans text-zinc-500">Pact Compliance</div>
-                    <div className="text-sm font-bold text-emerald-400 mt-0.5">RESTORED</div>
-                    <div className="text-[9px] text-zinc-500 font-sans">Penalty avoided</div>
+                    <div className="p-2.5 rounded bg-[#0E1110] border border-emerald-500/20">
+                      <div className="text-[9px] uppercase font-sans text-zinc-500">After</div>
+                      <div className="text-sm font-bold text-emerald-400 mt-0.5">88.5 mg/Nm³</div>
+                      <div className="text-[9px] text-zinc-500 font-sans">↓ 28.6 kg/day drop</div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27] text-[11px] text-zinc-400 flex items-start gap-2">
-                  <Info size={13} className="text-[#A8C83A] flex-shrink-0 mt-0.5" />
-                  <span>
-                    <strong className="text-zinc-300">MRV Readiness: </strong>
-                    Digital abatement evidence logged for ISO 14064-2 compliance. Potential creditable reduction volume: 5,183 tCO₂e / year (subject to methodology + verification).
-                  </span>
-                </div>
+                {/* ── 5. MRV & POTENTIAL CREDITABLE REDUCTION (Section 21) ── */}
+                {selectedCase.environmental_impact_report && (
+                  <div className="p-4 rounded-lg bg-[#080A09] border border-[#242A27] space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
+                          MRV & Potential Creditable Reduction
+                        </span>
+                        <div className="text-[10px] text-[#929A95]">
+                          Narrative: PROBLEM → CAUSE → ACTION → RESULT → VALUE
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowImpactModal(true)}
+                        className="px-3 py-1.5 rounded bg-[#141817] hover:bg-[#1a221f] border border-[#A8C83A]/40 text-xs font-mono text-[#A8C83A] font-bold transition-colors cursor-pointer"
+                      >
+                        Inspect Full MRV Report
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 font-mono text-xs">
+                      <div className="p-2 rounded bg-[#0E1110] border border-[#181E1C]">
+                        <div className="text-[9px] uppercase font-sans text-zinc-500">Daily Abatement</div>
+                        <div className="text-sm font-bold text-emerald-400 mt-0.5">-14.2 tCO₂e</div>
+                      </div>
+                      <div className="p-2 rounded bg-[#0E1110] border border-[#181E1C]">
+                        <div className="text-[9px] uppercase font-sans text-zinc-500">Annualized Volume</div>
+                        <div className="text-sm font-bold text-[#A8C83A] mt-0.5">5,183 t/year</div>
+                      </div>
+                      <div className="p-2 rounded bg-[#0E1110] border border-[#181E1C]">
+                        <div className="text-[9px] uppercase font-sans text-zinc-500">Potential Creditable</div>
+                        <div className="text-sm font-bold text-zinc-200 mt-0.5">5,183 tCO₂e</div>
+                      </div>
+                      <div className="p-2 rounded bg-[#0E1110] border border-[#181E1C]">
+                        <div className="text-[9px] uppercase font-sans text-zinc-500">MRV Status</div>
+                        <div className="text-sm font-bold text-amber-300 mt-0.5">AUDIT PENDING</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2 p-2.5 rounded bg-[#0E1110] border border-[#181E1C] text-[11px] text-[#929A95]">
+                      <Info size={13} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                      <span>
+                        <strong className="text-zinc-300">Methodology Disclaimer: </strong>
+                        ONER estimates emissions reductions and MRV readiness. Actual carbon-credit issuance requires an applicable methodology, eligibility assessment and independent verification.
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ) : (
-            <div className="rounded-lg bg-[#0E1110] border border-[#242A27] p-12 text-center text-zinc-500">
-              Select a community case to view the industrial evidence dossier.
-            </div>
-          )}
+            ) : (
+              <div className="p-12 text-center text-zinc-500 font-mono text-xs">
+                Select a case from the incident queue to inspect the engineering dossier.
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ── Environmental Impact Report Modal ────────────────────── */}
+      {/* Modal */}
       {selectedCase?.environmental_impact_report && (
         <EnvironmentalImpactReportModal
           report={selectedCase.environmental_impact_report}
@@ -480,13 +489,13 @@ function IndustryPortalContent() {
           onClose={() => setShowImpactModal(false)}
         />
       )}
-    </div>
+    </AppLayout>
   );
 }
 
 export default function IndustryPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-zinc-500 font-mono">Loading Industry Workspace...</div>}>
+    <Suspense fallback={<div className="p-8 text-zinc-500 font-mono">Loading Industry Operations...</div>}>
       <IndustryPortalContent />
     </Suspense>
   );
