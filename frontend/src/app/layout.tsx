@@ -1,10 +1,11 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import { AtmosphereProvider } from '@/lib/atmosphere';
 
 export const metadata: Metadata = {
-  title: 'ONER — Environmental AI Autopilot',
-  description: 'AI-powered environmental intelligence and industrial control autopilot. Sense. Predict. Act.',
-  keywords: ['environmental AI', 'carbon emissions', 'industrial monitoring', 'sustainability', 'autopilot'],
+  title: 'ONER — Environmental Command Center',
+  description: 'Evidence Intelligence & Environmental Accountability Network. Turn community reports into verified industrial action.',
+  keywords: ['environmental AI', 'evidence intelligence', 'carbon emissions', 'industrial monitoring', 'MRV'],
 };
 
 export default function RootLayout({
@@ -14,10 +15,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-[#090d0b] text-[#f0f3f1] antialiased min-h-screen selection:bg-emerald-500/20 selection:text-emerald-300">
-        <div className="relative min-h-screen">
-          {children}
-        </div>
+      <body className="antialiased min-h-screen selection:bg-[#A8C83A]/20 selection:text-[#C4DF61]">
+        <AtmosphereProvider>
+          <div className="relative min-h-screen">
+            {children}
+          </div>
+        </AtmosphereProvider>
       </body>
     </html>
   );

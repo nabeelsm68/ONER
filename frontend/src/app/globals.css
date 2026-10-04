@@ -1,58 +1,116 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
-/* ═══════════════════════════════════════════════════════
-   ONER — PREMIUM ENVIRONMENTAL INTELLIGENCE & INDUSTRIAL CONTROL
-   Composed control surface, restrained cinematic palette, semantic colors
-   ═══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════
+   ONER A + C DUAL-ATMOSPHERE DESIGN SYSTEM (CONTROL & FIELD)
+   Source: docs/ONER_Antigravity_Prompt_Pack.md §0.5
+   Visual Reference: design-reference/oner-directions.html
+   ══════════════════════════════════════════════════════════════════ */
+
 :root {
-  /* Surfaces: Bloomberg/Palantir-like high-density operational neutrality */
-  --oner-bg: #080A09;
-  --oner-surface: #0E1110;
-  --oner-surface-hover: #121615;
-  --oner-surface-elevated: #141817;
-  --oner-panel: #0E1110;
-  --oner-border: #242A27;
-  --oner-border-subtle: #181E1C;
-  --oner-border-focus: #343E3A;
+  --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-serif: 'Newsreader', Georgia, serif;
+}
 
-  /* Typography */
-  --oner-text: #F1F3EE;
-  --oner-text-secondary: #929A95;
-  --oner-text-muted: #626A65;
-  --oner-text-dim: #3E4541;
+/* ── Atmosphere: CONTROL (Default Dark Industrial Instrument) ── */
+:root,
+[data-atmosphere="control"] {
+  --bg: #080A09;
+  --surface: #0E1110;
+  --surface-hover: #121615;
+  --raised: #141817;
+  --line: #242A27;
+  --line-subtle: #181E1C;
+  --line-focus: #343E3A;
+  --ink: #F1F3EE;
+  --ink-2: #929A95;
+  --ink-3: #626A65;
+  --ink-dim: #3E4541;
+  --accent: #A8C83A;
+  --accent-highlight: #C4DF61;
+  --accent-dim: rgba(168, 200, 58, 0.15);
+  --on-accent: #121A0A;
 
-  /* Primary ONER Brand Accent */
-  --oner-accent: #A8C83A;
-  --oner-accent-highlight: #C4DF61;
+  /* Backward Compatibility Aliases */
+  --oner-bg: var(--bg);
+  --oner-surface: var(--surface);
+  --oner-surface-hover: var(--surface-hover);
+  --oner-surface-elevated: var(--raised);
+  --oner-panel: var(--surface);
+  --oner-border: var(--line);
+  --oner-border-subtle: var(--line-subtle);
+  --oner-border-focus: var(--line-focus);
+  --oner-text: var(--ink);
+  --oner-text-secondary: var(--ink-2);
+  --oner-text-muted: var(--ink-3);
+  --oner-text-dim: var(--ink-dim);
+  --oner-accent: var(--accent);
+  --oner-accent-highlight: var(--accent-highlight);
 
   /* Semantic Roles (Restrained, small indicators only) */
-  --oner-healthy: #10B981;      /* Muted green — positive outcome / verified */
+  --oner-healthy: #10B981;
   --oner-healthy-dim: rgba(16, 185, 129, 0.08);
-  --oner-amber: #D97706;        /* Muted amber — warning / drift */
-  --oner-red: #DC2626;          /* Muted red — breach / critical */
-  --oner-teal: #0D9488;         /* Muted teal — water systems */
-  --oner-blue: #0284C7;         /* Muted blue — energy / atmospheric */
+  --oner-amber: #D97706;
+  --oner-red: #DC2626;
+  --oner-teal: #0D9488;
+  --oner-blue: #0284C7;
+}
+
+/* ── Atmosphere: FIELD (Daylight Citizen Perspective) ────────── */
+[data-atmosphere="field"] {
+  --bg: #F4F3EC;
+  --surface: #FBFAF5;
+  --surface-hover: #F0EEE3;
+  --raised: #FFFFFF;
+  --line: #DAD8CC;
+  --line-subtle: #E6E4D9;
+  --line-focus: #B8B5A5;
+  --ink: #1B211C;
+  --ink-2: #4F5851;
+  --ink-3: #7B837C;
+  --ink-dim: #A8AFA9;
+  --accent: #A8C83A;
+  --accent-highlight: #93B329;
+  --accent-ink: #4F6A0E;
+  --accent-dim: rgba(79, 106, 14, 0.12);
+  --on-accent: #121A0A;
+
+  /* Backward Compatibility Aliases in Field */
+  --oner-bg: var(--bg);
+  --oner-surface: var(--surface);
+  --oner-surface-hover: var(--surface-hover);
+  --oner-surface-elevated: var(--raised);
+  --oner-panel: var(--surface);
+  --oner-border: var(--line);
+  --oner-border-subtle: var(--line-subtle);
+  --oner-border-focus: var(--line-focus);
+  --oner-text: var(--ink);
+  --oner-text-secondary: var(--ink-2);
+  --oner-text-muted: var(--ink-3);
+  --oner-text-dim: var(--ink-dim);
+  --oner-accent: var(--accent);
+  --oner-accent-highlight: var(--accent-highlight);
 }
 
 @theme {
-  --color-oner-bg: #080A09;
-  --color-oner-surface: #0E1110;
-  --color-oner-surface-hover: #121615;
-  --color-oner-surface-elevated: #141817;
-  --color-oner-border: #242A27;
-  --color-oner-border-subtle: #181E1C;
+  --color-oner-bg: var(--bg);
+  --color-oner-surface: var(--surface);
+  --color-oner-surface-hover: var(--surface-hover);
+  --color-oner-surface-elevated: var(--raised);
+  --color-oner-border: var(--line);
+  --color-oner-border-subtle: var(--line-subtle);
   
-  --color-oner-accent: #A8C83A;
+  --color-oner-accent: var(--accent);
   --color-oner-healthy: #10B981;
   --color-oner-amber: #D97706;
   --color-oner-red: #DC2626;
   --color-oner-teal: #0D9488;
   --color-oner-blue: #0284C7;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-display: 'Space Grotesk', 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-sans: 'Geist', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-serif: 'Newsreader', Georgia, serif;
 }
 
 * {
@@ -60,8 +118,8 @@
 }
 
 html, body {
-  background-color: var(--oner-bg);
-  color: var(--oner-text);
+  background-color: var(--bg);
+  color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -69,12 +127,55 @@ html, body {
   padding: 0;
 }
 
-/* Reduced motion support */
+/* ── SVG Drawing & Keyframe Animations from oner-directions.html ── */
+.p {
+  stroke-dasharray: 400;
+  stroke-dashoffset: 400;
+  animation: dr 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.f {
+  transform-box: fill-box;
+  transform-origin: left;
+  transform: scaleX(0);
+  animation: gr 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.late {
+  opacity: 0;
+  animation: fi 0.6s 2.4s forwards;
+}
+
+@keyframes dr {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes gr {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes fi {
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Accessibility: Reduced Motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .p, .f, .late {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+    transform: none !important;
+    opacity: 1 !important;
   }
 }
 
@@ -84,75 +185,35 @@ html, body {
   height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #090c0a;
+  background: var(--bg);
 }
 ::-webkit-scrollbar-thumb {
-  background: #18221c;
-  border-radius: 3px;
+  background: var(--line);
+  border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #25332b;
+  background: var(--ink-3);
 }
 
-/* Composed Control Surface Utilities */
-.control-surface {
-  background-color: #0e1310;
-  border: 1px solid #16201a;
-  border-radius: 0.75rem;
+/* ── Hairline Dividers ── */
+.hairline-h {
+  height: 1px;
+  background-color: var(--line);
+  width: 100%;
 }
 
-.control-surface-subtle {
-  background-color: #0c100e;
-  border: 1px solid #141c16;
+.hairline-v {
+  width: 1px;
+  background-color: var(--line);
+  align-self: stretch;
 }
 
-.control-surface-elevated {
-  background-color: #121814;
-  border: 1px solid #1c2720;
-}
-
-/* Atmospheric intelligence highlight */
-.intelligence-plane {
-  background: linear-gradient(135deg, rgba(16, 24, 19, 0.95) 0%, rgba(13, 19, 16, 0.95) 100%);
-  border: 1px solid #1f2c24;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45);
-}
-
-/* Recharts override for ultra-clean tooltips */
-.recharts-default-tooltip {
-  background-color: #0e1310 !important;
-  border: 1px solid #202c24 !important;
-  border-radius: 6px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6) !important;
-  padding: 8px 12px !important;
-}
-
-.recharts-tooltip-item {
-  color: #e4e7e5 !important;
-  font-size: 11px !important;
-  font-family: 'JetBrains Mono', monospace !important;
-}
-
-.recharts-cartesian-grid line {
-  stroke: #141c17 !important;
-}
-
-/* Simulated Data Hatch Pattern (so simulated data is never mistaken for verified) */
+/* ── Simulated Data Hatch Pattern ── */
 .pattern-simulated-hatch {
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(168, 200, 58, 0.06),
-    rgba(168, 200, 58, 0.06) 6px,
-    transparent 6px,
-    transparent 12px
-  );
-}
-
-.pattern-simulated-amber-hatch {
-  background-image: repeating-linear-gradient(
-    45deg,
-    rgba(217, 119, 6, 0.08),
-    rgba(217, 119, 6, 0.08) 6px,
+    rgba(168, 200, 58, 0.08),
+    rgba(168, 200, 58, 0.08) 6px,
     transparent 6px,
     transparent 12px
   );
@@ -161,24 +222,17 @@ html, body {
 .pattern-simulated-neutral-hatch {
   background-image: repeating-linear-gradient(
     45deg,
-    rgba(146, 154, 149, 0.05),
-    rgba(146, 154, 149, 0.05) 6px,
+    rgba(146, 154, 149, 0.06),
+    rgba(146, 154, 149, 0.06) 6px,
     transparent 6px,
     transparent 12px
   );
 }
 
-/* Hairline divider */
-.hairline-divider {
-  height: 1px;
-  background-color: var(--oner-border);
-  width: 100%;
-}
-
-.hairline-divider-v {
-  width: 1px;
-  background-color: var(--oner-border);
-  align-self: stretch;
+/* ── Focus Outline for Keyboard Accessibility ── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* Hide next.js dev overlay indicator badge */
