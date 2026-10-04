@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ONER · Three design directions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@300;400&family=Newsreader:opsz,wght@6..72,400&display=swap">
+<style>
+:root{--bg:#E9E8E0;--ink:#1B211C;--ink2:#566058;--line:#C9C7BA;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--sans:'Geist',system-ui,sans-serif;--mono:'Geist Mono',ui-monospace,monospace;--serif:'Newsreader',Georgia,serif}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#050706;--ink:#F1F3EE;--ink2:#929A95;--line:#242A27}}
+:root[data-theme="dark"]{--bg:#050706;--ink:#F1F3EE;--ink2:#929A95;--line:#242A27}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+header{max-width:1240px;margin:0 auto;padding:28px 20px 12px}
+h1{font:400 30px/1.15 var(--serif);margin:0 0 6px}
+header p{margin:0;color:var(--ink2);max-width:60ch}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;max-width:1240px;margin:12px auto 0;padding:0 20px}
+.tabs button{font:500 14px var(--sans);color:var(--ink);background:none;border:1px solid var(--line);padding:10px 16px;border-radius:2px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tabs button:focus-visible{outline:2px solid #A8C83A;outline-offset:2px}
+.cap{max-width:1240px;margin:12px auto;padding:0 20px;color:var(--ink2)}
+.board{display:none;max-width:1240px;margin:0 auto 40px}.board.on{display:block}
+.scroll{overflow-x:auto;border:1px solid var(--line)}
+.art{min-width:1120px;position:relative}
+small.n{font:300 12px var(--mono)}
+.p{stroke-dasharray:520;stroke-dashoffset:520;animation:dr 1.2s forwards}
+.f{transform-box:fill-box;transform-origin:left;transform:scaleX(0);animation:gr .9s forwards}
+.late{opacity:0;animation:fi .6s 2.6s forwards}
+@keyframes dr{to{stroke-dashoffset:0}}@keyframes gr{to{transform:scaleX(1)}}@keyframes fi{to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.p,.f,.late{animation:none;stroke-dashoffset:0;transform:none;opacity:1}}
+/* A */
+.day{background:#F4F3EC;color:#1B211C;display:grid;grid-template-columns:1.1fr .9fr;min-height:380px}
+.day nav{grid-column:1/3;display:flex;gap:28px;align-items:center;padding:20px 40px;font-size:13px}
+.day nav b{font:500 18px var(--sans);letter-spacing:.14em;margin-right:auto}
+.btn{background:#A8C83A;color:#121A0A;font:500 14px var(--sans);padding:12px 20px;border-radius:2px}
+.day h2{font:400 54px/1.05 var(--serif);margin:36px 40px 14px;max-width:15ch}
+.day p{margin:0 40px 22px;max-width:46ch;color:#4F5851;font-size:17px}
+.hz{height:1px;background:#8a8f84;position:relative}
+.hz span{position:absolute;top:-22px;font-size:11px;color:#7B837C}
+.night{background:#080A09;color:#F1F3EE;padding:34px 40px 26px}
+.act{position:relative;height:22px;font-size:12px;color:#929A95;margin-bottom:6px}.act i{position:absolute;font-style:normal}
+.beats{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:14px;font-size:12.5px;color:#929A95}
+.beats b{display:block;color:#F1F3EE;font-weight:500;font-size:13.5px}
+.tag{font-size:11.5px;color:#626A65;margin-top:18px}
+/* B */
+.B{height:660px;background:linear-gradient(180deg,#070C0B 0%,#0F1D19 46%,#6E4B2C 84%,#120D09 100%);color:#F1F3EE;overflow:hidden}
+.B h2{position:absolute;left:48px;top:84px;margin:0;font:400 76px/1.0 var(--serif);max-width:11ch}
+.B .sub{position:absolute;left:48px;top:330px;max-width:38ch;color:#C9CFC9;font-size:17px;margin:0}
+.B .bar{position:absolute;left:0;right:0;bottom:0;padding:70px 48px 22px;background:linear-gradient(180deg,transparent,#080A09 52%)}
+.B .nav{position:absolute;top:22px;left:48px;right:48px;display:flex;gap:26px;font-size:13px;color:#C9CFC9}.B .nav b{margin-right:auto;color:#fff;letter-spacing:.14em;font-weight:500;font-size:17px}
+/* C */
+.C{background:#090B0A;color:#F1F3EE;display:grid;grid-template-columns:1.55fr 1fr}
+.C>div{padding:32px 36px}.C>div+div{border-left:1px solid #242A27}
+.C h2{font:300 34px/1.1 var(--sans);margin:6px 0 18px;letter-spacing:-.01em}
+.row{display:grid;grid-template-columns:78px 1fr 72px;gap:12px;align-items:center;padding:13px 0;border-top:1px solid #242A27;font-size:13px}
+.mini{display:flex;gap:3px}.mini i{display:block;width:26px;height:16px;border:1px solid #333B37;position:relative}.mini i b{position:absolute;left:0;top:0;bottom:0;background:#A8C83A;opacity:.85}
+.mut{color:#929A95}
+</style></head><body>
+<header><h1>ONER · three design directions</h1><p>Each board is the homepage first screen with the same seeded case (COMM-2026-00421). Pick the one that feels right and I'll carry it through every screen.</p></header>
+<div class="tabs" role="tablist">
+<button role="tab" aria-selected="true" data-b="A">A · Horizon</button>
+<button role="tab" aria-selected="false" data-b="B">B · Field film</button>
+<button role="tab" aria-selected="false" data-b="C">C · Instrument</button></div>
+<p class="cap" id="cap"></p>
+
+<section class="board on" id="A"><div class="scroll"><div class="art">
+<div class="day">
+<nav><b>ONER</b><span>Experience</span><span>For industry</span><span>For government</span><span class="btn">Report pollution</span></nav>
+<div><h2>A community report becomes verified action.</h2><p>ONER checks what residents see against facility data, finds the likely cause, and shows the measured result.</p></div>
+<div style="position:relative"><svg viewBox="0 0 420 300" width="100%" height="100%" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="pl" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8d928a" stop-opacity=".55"/><stop offset="1" stop-color="#cfd0c8" stop-opacity="0"/></linearGradient></defs><ellipse cx="300" cy="90" rx="90" ry="46" fill="url(#pl)"/><ellipse cx="250" cy="60" rx="70" ry="30" fill="url(#pl)"/><rect x="270" y="130" width="12" height="130" fill="#2B3326"/><rect x="310" y="150" width="10" height="110" fill="#2B3326"/><path d="M0 260 Q100 225 200 250 T420 240V300H0Z" fill="#2B3326"/></svg>
+<div style="position:absolute;left:24px;bottom:24px;background:#fff;padding:8px 8px 6px;font-size:11px;color:#4F5851;box-shadow:0 12px 30px -16px rgba(27,33,28,.3)"><div style="width:128px;height:76px;background:linear-gradient(#cfd2c8,#8d928a)"></div>Your photo, 14:07 <span style="color:#4F6A0E">● location shared</span></div></div>
+</div>
+<div class="hz"><span style="left:40px">Field</span><span style="right:40px;color:#7B837C">Control</span></div>
+<div class="night"><div class="act"><i style="left:0">Community</i><i style="left:37%">ONER</i><i style="left:58%">Industry</i><i style="left:80%">Government</i><i style="right:0">Community</i></div>
+<div class="chain" data-t="a"></div>
+<div class="beats"><div><b>Seen</b>A resident photographs smoke</div><div><b>Fused</b>Six signals checked</div><div><b>Explained</b>Cause found</div><div><b>Acted</b>Facility applies the fix</div><div><b>Verified</b>Result measured</div><div><b>Returned</b>Impact reaches the resident</div></div>
+<div class="tag">Representative case COMM-2026-00421. Demo data, simulated telemetry.</div></div>
+</div></div></section>
+
+<section class="board" id="B"><div class="scroll"><div class="art B">
+<div class="nav"><b>ONER</b><span>Experience</span><span>Report</span><span>Industry</span><span>Government</span></div>
+<svg viewBox="0 0 1180 660" width="100%" height="100%" style="position:absolute;inset:0" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><defs><linearGradient id="pb" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#d9c4a6" stop-opacity=".4"/><stop offset="1" stop-color="#d9c4a6" stop-opacity="0"/></linearGradient></defs><ellipse cx="860" cy="250" rx="190" ry="90" fill="url(#pb)"/><ellipse cx="760" cy="180" rx="150" ry="60" fill="url(#pb)"/><rect x="838" y="300" width="18" height="230" fill="#0A0F0C"/><rect x="900" y="340" width="14" height="190" fill="#0A0F0C"/><path d="M0 500 Q260 440 520 490 T1180 470V660H0Z" fill="#0A0F0C"/></svg>
+<svg viewBox="0 0 1180 660" width="100%" height="100%" style="position:absolute;inset:0" aria-hidden="true"><g stroke="#C4DF61" stroke-width="2" fill="none"><path d="M690 140v-24h24M1010 116h24v24M1034 380v24h-24M714 404h-24v-24"/></g><text x="696" y="438" fill="#C4DF61" font-size="12" font-family="Geist Mono">14:07 · location shared</text></svg>
+<h2>What a community sees, ONER proves.</h2><p class="sub">Residents report. ONER weighs the evidence, finds the cause, and measures what changes.</p>
+<div class="bar"><div class="chain" data-t="b"></div></div>
+</div></div></section>
+
+<section class="board" id="C"><div class="scroll"><div class="art C">
+<div><div class="mut" style="font-size:13px">Case COMM-2026-00421 · Furnace F-101 · Verified</div><h2>The smoke a resident reported is now 14.2 tCO₂e a day lower.</h2>
+<svg viewBox="0 0 760 300" width="100%" role="img" aria-label="Reduction wedge"><defs><pattern id="h" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#A8C83A" stroke-opacity=".35"/></pattern></defs>
+<polygon points="400,50 740,50 740,212 400,212" fill="#A8C83A" fill-opacity=".2" stroke="#A8C83A"/>
+<polyline fill="none" stroke="#929A95" stroke-width="1.5" points="20,52 60,44 100,58 140,46 180,54 220,42 260,56 300,48 340,52 380,50"/>
+<polyline class="late" fill="none" stroke="#A8C83A" stroke-width="2" points="380,50 410,150 450,214 490,206 530,216 570,208 610,214 650,206 690,214 740,210"/>
+<line x1="20" y1="50" x2="740" y2="50" stroke="#626A65" stroke-dasharray="4 4"/><line x1="380" y1="20" x2="380" y2="270" stroke="#F1F3EE"/>
+<text x="410" y="150" fill="#F1F3EE" font-size="104" font-weight="300" font-family="Geist Mono">14.2</text><text x="414" y="178" fill="#C9CFC9" font-size="15" font-family="Geist">tCO₂e per day, measured</text>
+<g fill="#929A95" font-size="13" font-family="Geist"><text x="20" y="288">Before: average level</text><text x="392" y="288">Damper trim 1.042 applied</text><text x="560" y="288">After: new average</text></g></svg>
+<div style="margin-top:14px"><span style="font:300 56px var(--mono)">5,183</span> <span class="mut">tCO₂e per year, annualized</span><div style="margin-top:4px;font-size:13px;color:#C4DF61">Potential creditable reduction</div><div class="mut" style="font-size:12px;margin-top:8px">14.2 × 365. Estimate only, not an issued carbon credit. Demo data.</div></div></div>
+<div><div style="font-size:15px;margin-bottom:6px">Cases that need attention</div><div class="mut" style="font-size:12.5px;margin-bottom:10px">Each bar shows how much evidence supports the case.</div>
+<div class="row"><span class="mut">00421</span><span class="mini"><i><b style="width:42%"></b></i><i><b style="width:96%"></b></i><i><b style="width:94%"></b></i><i><b style="width:95%"></b></i><i><b style="width:92%"></b></i><i><b style="width:96%"></b></i></span><span>Verified</span></div>
+<div class="row"><span class="mut">00418</span><span class="mini"><i><b style="width:70%"></b></i><i><b style="width:80%"></b></i><i><b style="width:60%"></b></i><i><b style="width:75%"></b></i><i></i><i></i></span><span>Acting</span></div>
+<div class="row"><span class="mut">00415</span><span class="mini"><i><b style="width:50%"></b></i><i><b style="width:90%"></b></i><i><b style="width:40%"></b></i><i></i><i></i><i></i></span><span>Checking</span></div>
+<div class="row"><span class="mut">00409</span><span class="mini"><i><b style="width:30%"></b></i><i></i><i></i><i></i><i></i><i></i></span><span>Waiting</span></div>
+<div class="mut" style="font-size:12px;margin-top:22px;line-height:1.6">Starts from the result. Every case in the register is a smaller version of the same chain, so judges can read the platform from the conclusion backward.</div></div>
+</div></div></section>
+
+<script>
+const N=[["Citizen report",10,4.2,"photo + location"],["Facility proximity",20,19.2,"F-101 nearby"],["Time match",15,14.1,"aligned"],["Telemetry",30,28.5,"NOx +31.4%"],["Ambient sensor",15,13.8,"agrees"],["Baseline",10,9.6,"outside normal"]];
+const K={a:{ink:"#F1F3EE",mut:"#929A95",ln:"#333B37",acc:"#A8C83A",dim:"rgba(168,200,58,.22)"},b:{ink:"#F1F3EE",mut:"#C9CFC9",ln:"rgba(241,243,238,.3)",acc:"#C4DF61",dim:"rgba(196,223,97,.2)",thin:1}};
+function chain(c,t){let s=`<svg viewBox="0 0 1180 330" width="100%" style="font-family:var(--sans)" role="img" aria-label="Evidence chain: six signals converge to 89.4 corroboration, then cause, action, verification and 14.2 tCO2e per day">`;
+N.forEach((n,i)=>{const y=i*54+4,yc=y+20,w=n[1]*.2*(c.thin?.4:1),d=i*.3;
+s+=`<path class="p" d="M160 ${yc}C300 ${yc} 300 166 440 166" fill="none" stroke="${c.acc}" stroke-width="${w}" style="animation-delay:${d}s"/><rect x="0" y="${y}" width="160" height="40" fill="none" stroke="${c.ln}" rx="2"/><rect class="f" x="0" y="${y}" width="${160*n[2]/n[1]}" height="40" fill="${c.dim}" rx="2" style="animation-delay:${d}s"/><text x="12" y="${y+17}" font-size="12" fill="${c.ink}">${n[0]}</text><text x="12" y="${y+32}" font-size="11" fill="${c.mut}">${n[3]}  ${n[2]}/${n[1]}</text>`});
+s+=`<rect x="440" y="4" width="130" height="320" fill="none" stroke="${c.acc}" rx="2"/><text x="505" y="176" text-anchor="middle" font-size="44" font-weight="300" fill="${c.ink}" font-family="Geist Mono">89.4</text><text x="505" y="200" text-anchor="middle" font-size="11" fill="${c.mut}">corroborated</text><path class="p" d="M570 166H1010" stroke="${c.acc}" stroke-width="3" fill="none" style="animation-delay:2s"/>`;
+[[690,"Likely cause","Burner fouling"],[820,"Action","Damper trim 1.042"],[950,"Verified","4 signals agree"]].forEach(a=>{s+=`<g class="late"><rect x="${a[0]-7}" y="159" width="14" height="14" fill="${c.acc}"/><text x="${a[0]}" y="144" text-anchor="middle" font-size="12" fill="${c.ink}">${a[1]}</text><text x="${a[0]}" y="196" text-anchor="middle" font-size="11" fill="${c.mut}">${a[2]}</text></g>`});
+s+=`<g class="late" fill="none" stroke="${c.acc}" stroke-width="2"><path d="M1030 120h-10v92h10M1170 120h10v92h-10"/></g><text class="late" x="1050" y="180" font-size="44" font-weight="300" fill="${c.ink}" font-family="Geist Mono">14.2</text><text class="late" x="1052" y="202" font-size="11" fill="${c.mut}">tCO₂e per day</text></svg>`;return s}
+document.querySelectorAll(".chain").forEach(e=>e.innerHTML=chain(K[e.dataset.t],e.dataset.t));
+const D={A:"Daylight meets instrument. A single horizon line divides the citizen's world from the operator's, and the chain tells the whole story in one look.",B:"Documentary and cinematic. The evidence chain sits over a landscape at dusk, like the opening of a film about one report.",C:"Starts from the conclusion. The Reduction Wedge and the case register make the result the hero, and the chain is read backward from it."};
+const cap=document.getElementById("cap");function show(k){document.querySelectorAll(".board").forEach(b=>b.classList.toggle("on",b.id===k));document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.b===k));cap.textContent=D[k]}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.b));show("A");
+</script></body></html>
