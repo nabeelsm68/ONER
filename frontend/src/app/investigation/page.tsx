@@ -1,518 +1,497 @@
 'use client';
 
-import React, { useEffect, useState, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
-import AppLayout from '@/components/AppLayout';
-import { api } from '@/lib/api';
+import { useSearchParams, useRouter } from 'next/navigation';
+import AtmosphericShell from '@/components/shell/AtmosphericShell';
+import HorizonLine, { HorizonLevel } from '@/components/primitives/HorizonLine';
+import StateMark from '@/components/primitives/StateMark';
+import DemoTag from '@/components/primitives/DemoTag';
+import { ConvergenceChain, CompactChain, ReasoningTrace } from '@/components/chain';
+import { api, CommunityReport } from '@/lib/api';
+import { CANONICAL_CASE } from '@/lib/seed';
 import {
-  ArrowDown,
+  ArrowLeft,
   ArrowRight,
-  FileText,
-  Info,
-  ShieldCheck,
-  CheckCircle2,
+  SlidersHorizontal,
+  Activity,
   AlertTriangle,
-  HelpCircle,
-  Binary,
+  Info,
+  CheckCircle2,
+  FileText,
+  RotateCcw,
+  Sparkles,
 } from 'lucide-react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  ReferenceLine,
 } from 'recharts';
-import ScoreDefinitions from '@/components/ScoreDefinitions';
 
-function InvestigationContent() {
+function InvestigationInner() {
   const searchParams = useSearchParams();
-  const initialId = searchParams.get('id');
+  const router = useRouter();
 
-  const [anomalies, setAnomalies] = useState<any[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(initialId);
-  const [detail, setDetail] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [severityFilter, setSeverityFilter] = useState<'ALL' | 'CRITICAL' | 'HIGH'>('ALL');
-  const [showHowCalculated, setShowHowCalculated] = useState(false);
+  const rawCase = searchParams.get('case') || 'COMM-2026-00421';
+  const caseId = rawCase.startsWith('COMM-2026-')
+    ? rawCase
+    : `COMM-2026-${rawCase.replace(/^COMM-2026-/, '').padStart(5, '0')}`;
 
-  const loadAnomalies = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await api.anomalies();
-      const list = res.anomalies || [];
-      setAnomalies(list);
-      setSelectedId((prev) => prev || (list.length > 0 ? list[0].id : null));
-    } catch (err) {
-      console.error('Anomalies load error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [report, setReport] = useState<CommunityReport | null>(null);
+  const [rootCauseData, setRootCauseData] = useState<any>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  const loadDetail = useCallback(async (id: string) => {
-    setDetailLoading(true);
-    try {
-      const anomaly = anomalies.find((a: any) => a.id === id);
-      const lookupId = anomaly?.incident_id || id;
-      const res = await api.rootCause(lookupId);
-      setDetail(res);
-    } catch (err) {
-      console.error('Detail load error:', err);
-    } finally {
-      setDetailLoading(false);
-    }
-  }, [anomalies]);
-
+  // Load backend intelligence if available
   useEffect(() => {
-    loadAnomalies();
-  }, [loadAnomalies]);
+    async function loadInvestigationData() {
+      try {
+        setLoading(true);
+        // Try to fetch report and root-cause details
+        try {
+          const reportRes = await api.getCommunityReport(caseId);
+          if (reportRes) setReport(reportRes);
+        } catch (e) {
+          console.warn('Report lookup fallback to canonical seed:', e);
+        }
 
-  useEffect(() => {
-    if (selectedId) {
-      loadDetail(selectedId);
+        try {
+          // Attempt root cause lookup using default incident id or INC-004
+          const rcRes = await api.rootCause('INC-004');
+          if (rcRes) setRootCauseData(rcRes);
+        } catch (e) {
+          console.warn('Root cause lookup fallback to canonical logic:', e);
+        }
+      } catch (err) {
+        console.warn('Investigation load error:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [selectedId, loadDetail]);
+    loadInvestigationData();
+  }, [caseId]);
 
-  const filteredAnomalies = anomalies.filter((a: any) => {
-    if (severityFilter === 'ALL') return true;
-    return a.severity === severityFilter;
-  });
+  // Baseline distribution data for Question 1 Anomaly visualization
+  const distributionData = [
+    { score: 0.1, density: 4, baseline: 'Normal' },
+    { score: 0.2, density: 12, baseline: 'Normal' },
+    { score: 0.3, density: 38, baseline: 'Normal' },
+    { score: 0.4, density: 72, baseline: 'Normal' },
+    { score: 0.5, density: 95, baseline: 'Normal' },
+    { score: 0.6, density: 55, baseline: 'Normal' },
+    { score: 0.7, density: 24, baseline: 'Elevated' },
+    { score: 0.8, density: 9, baseline: 'Anomaly Window' },
+    { score: 0.884, density: 4, label: 'Current: 0.884', baseline: 'Critical Anomaly' },
+    { score: 0.95, density: 1, baseline: 'Extreme' },
+  ];
 
   return (
-    <div className="space-y-6 text-[#F1F3EE]">
-      {/* ── Page Header Strip ─────────────────────────────────── */}
-      <div className="flex items-center justify-between flex-wrap gap-4 p-5 rounded-xl bg-[#0E1110] border border-[#242A27]">
-        <div>
-          <div className="text-[10px] font-mono text-[#A8C83A] uppercase font-bold tracking-wider">
-            ANOMALY DETECTION & CAUSAL ROOT CAUSE ENGINE
-          </div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-[#F1F3EE] mt-0.5">
-            AI Investigation & Fault Isolation
-          </h1>
-          <div className="text-xs text-[#929A95] mt-0.5">
-            Model: Isolation Forest (200 trees) &bull; Deterministic causal graph traversal
-          </div>
-        </div>
+    <div
+      className="min-h-screen flex flex-col bg-[#080A09] text-[#F1F3EE] transition-colors duration-300"
+      data-atmosphere="control"
+    >
+      {/* ── Top 56px Global Command Bar ─────────────────────────── */}
+      <AtmosphericShell />
 
-        <div className="flex items-center gap-3">
-          <ScoreDefinitions variant="button-modal" />
+      {/* ── Case Horizon Level Switcher ─────────────────────────── */}
+      <div className="border-b border-[#242A27] bg-[#0E1110] select-none">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Breadcrumb back to Case */}
+          <div className="flex items-center gap-2 font-mono text-xs text-[#929A95]">
+            <Link
+              href={`/case/${caseId}?level=control`}
+              className="inline-flex items-center gap-1.5 text-[#F1F3EE] hover:text-[#A8C83A] transition-colors"
+            >
+              <ArrowLeft size={13} />
+              <span>CASE {caseId}</span>
+            </Link>
+            <span>/</span>
+            <span className="text-[#A8C83A] font-bold">INVESTIGATION INSTRUMENT</span>
+          </div>
 
-          {/* Severity filter chips */}
-          <div className="flex items-center gap-1 p-1 rounded-lg bg-[#080A09] border border-[#242A27]">
-            {(['ALL', 'CRITICAL', 'HIGH'] as const).map((s) => (
-              <button
-                key={s}
-                onClick={() => setSeverityFilter(s)}
-                className={`px-3 py-1 rounded text-xs font-mono transition-all cursor-pointer ${
-                  severityFilter === s
-                    ? 'bg-[#141817] text-[#A8C83A] font-bold border border-[#A8C83A]/40'
-                    : 'text-[#929A95] hover:text-[#F1F3EE]'
-                }`}
-              >
-                {s === 'ALL' ? 'ALL INCIDENTS' : s}
-              </button>
-            ))}
+          {/* Level Switcher (CONTROL active) */}
+          <div className="flex items-center gap-4">
+            <HorizonLine
+              activeLevel="control"
+              onLevelChange={(lvl: HorizonLevel) => router.push(`/case/${caseId}?level=${lvl}`)}
+            />
           </div>
         </div>
       </div>
 
-      {/* ── MASTER-DETAIL WORKBENCH ───────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Left Column: Incident Queue (4 Cols) */}
-        <div className="lg:col-span-4 p-4 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-              Detected Anomalies ({filteredAnomalies.length})
+      {/* ── Connected Intelligence Instruments Sub-Nav ─────────── */}
+      <div className="border-b border-[#181E1C] bg-[#080A09] px-4 sm:px-8">
+        <div className="max-w-[1440px] mx-auto flex items-center justify-between overflow-x-auto py-2.5 text-xs font-mono">
+          <div className="flex items-center gap-6 shrink-0">
+            <span className="text-[#A8C83A] font-bold flex items-center gap-1.5 border-b-2 border-[#A8C83A] pb-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#A8C83A]" />
+              <span>1. INVESTIGATE</span>
             </span>
-            <span className="text-[10px] font-mono text-[#929A95]">Isolation Forest</span>
+            <Link
+              href={`/simulator?case=${caseId}`}
+              className="text-[#929A95] hover:text-[#F1F3EE] transition-colors pb-1"
+            >
+              2. SIMULATE
+            </Link>
+            <Link
+              href={`/carbon?case=${caseId}`}
+              className="text-[#929A95] hover:text-[#F1F3EE] transition-colors pb-1"
+            >
+              3. CARBON + MRV
+            </Link>
           </div>
 
-          {loading ? (
-            <div className="p-8 text-center text-xs font-mono text-zinc-400">
-              Scanning plant telemetry...
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto pr-1 custom-scrollbar">
-              {filteredAnomalies.map((a: any) => {
-                const isSelected = selectedId === a.id;
-                const isCrit = a.severity === 'CRITICAL';
-
-                return (
-                  <div
-                    key={a.id}
-                    onClick={() => setSelectedId(a.id)}
-                    className={`p-3.5 rounded-lg border transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-[#141817] border-[#A8C83A]/60 shadow-sm'
-                        : 'bg-[#080A09] border-[#242A27] hover:border-[#38433e] hover:bg-[#121614]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
-                            isCrit
-                              ? 'bg-red-500/10 text-red-400 border-red-500/25'
-                              : 'bg-amber-500/10 text-amber-400 border-amber-500/25'
-                          }`}
-                        >
-                          {a.severity}
-                        </span>
-                        <span className="text-xs font-semibold text-zinc-200">
-                          {a.component}
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-mono text-zinc-400">
-                        {a.date}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-[#929A95] mt-1.5 line-clamp-2 leading-relaxed">
-                      {a.evidence}
-                    </p>
-
-                    <div className="mt-2.5 pt-2 border-t border-[#181E1C] flex items-center justify-between text-[10px] font-mono">
-                      <span className="text-amber-400">Anomaly Magnitude: {a.anomaly_magnitude ? a.anomaly_magnitude.toFixed(3) : '0.884'}</span>
-                      <span className={isSelected ? 'text-[#A8C83A] font-bold' : 'text-[#929A95]'}>
-                        Inspect &rarr;
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Right Column: Formal Investigation Dossier (8 Cols) */}
-        <div className="lg:col-span-8 space-y-4">
-          {detailLoading ? (
-            <div className="p-12 text-center text-xs font-mono text-zinc-400 rounded-xl bg-[#0E1110] border border-[#242A27]">
-              Traversing telemetry causality graph...
-            </div>
-          ) : detail ? (
-            <div className="p-5 rounded-xl bg-[#0E1110] border border-[#242A27] space-y-5">
-              {/* Dossier Header Strip */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#242A27]">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-[#141817] border border-[#242A27] text-zinc-300">
-                    <FileText size={18} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-zinc-100 font-mono">
-                        CASE-{detail.anomaly_id || 'F101'}
-                      </span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/25 font-bold">
-                        {detail.urgency || 'HIGH'} SEVERITY
-                      </span>
-                    </div>
-                    <div className="text-xs text-[#929A95] mt-0.5">
-                      Target Subsystem: {detail.component} &bull; Causal Fault Analysis
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-right text-xs font-mono">
-                  <span className="text-[10px] uppercase font-sans text-zinc-500 block">ROOT-CAUSE CONFIDENCE</span>
-                  <div className="text-base font-bold text-emerald-400">99.4%</div>
-                  <div className="text-[10px] text-zinc-400 font-sans">Physical graph verified</div>
-                </div>
-              </div>
-
-              {/* ── EXPLAINABLE SCORE CLASSIFICATION STRIP ──────────── */}
-              <div className="p-4 rounded-lg bg-[#080A09] border border-[#242A27] space-y-3">
-                <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-wider text-[#626A65]">
-                  <span>SCORE TAXONOMY CLASSIFICATION</span>
-                  <span>PRECISE · NON-PROBABILISTIC</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs font-mono">
-                  <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27]">
-                    <div className="text-[9px] uppercase font-sans text-[#626A65]">1. MODEL SCORE</div>
-                    <div className="text-base font-bold text-amber-400 mt-0.5">0.884</div>
-                    <div className="text-[10px] text-[#929A95] font-sans">Isolation Forest Multi-Dimensional Deviation</div>
-                  </div>
-
-                  <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27]">
-                    <div className="text-[9px] uppercase font-sans text-[#626A65]">2. EVIDENCE SCORE</div>
-                    <div className="text-base font-bold text-[#A8C83A] mt-0.5">89.4%</div>
-                    <div className="text-[10px] text-[#929A95] font-sans">Multi-Source Independent Signal Corroboration</div>
-                  </div>
-
-                  <div className="p-2.5 rounded bg-[#0E1110] border border-[#242A27]">
-                    <div className="text-[9px] uppercase font-sans text-[#626A65]">3. BUSINESS KPI</div>
-                    <div className="text-base font-bold text-[#F1F3EE] mt-0.5">87.3 / 100</div>
-                    <div className="text-[10px] text-[#929A95] font-sans">Facility Environmental Health Index</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* ── ANSWER-FIRST 5-QUESTION PROTOCOL ────────────────── */}
-              <div className="space-y-3 pt-1">
-                <div className="text-xs font-bold uppercase tracking-wider text-[#F1F3EE]">
-                  Answer-First Investigation Protocol
-                </div>
-
-                {/* Question 1: What was unusual? */}
-                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold text-amber-400 uppercase">
-                      QUESTION 1 · WHAT WAS UNUSUAL?
-                    </span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
-                      HIGH DEVIATION
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 font-mono text-xs pt-1">
-                    <div className="p-2 rounded bg-[#0E1110] border border-[#242A27]">
-                      <div className="text-[9px] text-[#626A65] font-sans">NOx Concentration</div>
-                      <div className="text-red-400 font-bold mt-0.5">+31.4% (131.4 mg)</div>
-                    </div>
-                    <div className="p-2 rounded bg-[#0E1110] border border-[#242A27]">
-                      <div className="text-[9px] text-[#626A65] font-sans">Flue Gas Temperature</div>
-                      <div className="text-amber-400 font-bold mt-0.5">+18.4°C Excess</div>
-                    </div>
-                    <div className="p-2 rounded bg-[#0E1110] border border-[#242A27]">
-                      <div className="text-[9px] text-[#626A65] font-sans">Anomaly Magnitude</div>
-                      <div className="text-[#F1F3EE] font-bold mt-0.5">0.884 (Isolation Forest)</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Question 2: Is the observation supported? */}
-                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold text-[#A8C83A] uppercase">
-                      QUESTION 2 · IS THE OBSERVATION SUPPORTED?
-                    </span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/30">
-                      89.4% CORROBORATED
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#929A95] leading-relaxed">
-                    Yes. Community observation COMM-2026-00421 is corroborated with an 89.4% evidence
-                    fusion score. Independent validation confirmed via stack CEMS optical density,
-                    flue pyrometry, consensual GPS perimeter proximity (0.42 km), and ambient fence monitoring.
-                  </p>
-                </div>
-
-                {/* Question 3: How did ONER reason? (Reasoning Trace) */}
-                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-2">
-                  <div className="text-[10px] font-mono font-bold text-[#929A95] uppercase">
-                    QUESTION 3 · HOW DID ONER REASON? (REASONING TRACE)
-                  </div>
-                  <div className="relative pl-3 space-y-2 before:absolute before:left-1 before:top-2 before:bottom-2 before:w-[1px] before:bg-[#242A27] text-xs font-mono">
-                    <div className="text-[#929A95]">
-                      <span className="text-[#A8C83A]">T+0s:</span> Citizen photo uploaded with consensual GPS at boundary perimeter.
-                    </div>
-                    <div className="text-[#929A95]">
-                      <span className="text-[#A8C83A]">T+4s:</span> Telemetry ingest: Downwind PM2.5 spike (+117%) matched wind vector 240° SW.
-                    </div>
-                    <div className="text-[#929A95]">
-                      <span className="text-[#A8C83A]">T+12s:</span> Optical CEMS stack scan detects opacity anomaly (0.884 Isolation Forest score).
-                    </div>
-                    <div className="text-[#929A95]">
-                      <span className="text-[#A8C83A]">T+28s:</span> Causal traversal eliminates compressor surge; confirms fuel-rich trim (0.94) on Burner Plenum 4B.
-                    </div>
-                  </div>
-                </div>
-
-                {/* Question 4: Likely cause? */}
-                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono font-bold text-[#C4DF61] uppercase">
-                      QUESTION 4 · LIKELY CAUSE?
-                    </span>
-                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-[#141817] text-[#C4DF61] border border-[#C4DF61]/30">
-                      SUPPORT: 99.4%
-                    </span>
-                  </div>
-                  <div className="text-sm font-semibold text-[#F1F3EE]">
-                    Burner Refractory Fouling / Thermal Efficiency Degradation
-                  </div>
-                  <p className="text-xs text-[#929A95] leading-relaxed">
-                    Combustion instability in Furnace F-101 North Processing Train burner plenum 4B.
-                    Refractory accumulation degraded burner aerodynamics, inducing fuel-rich pockets and unburnt carbon plume.
-                  </p>
-                </div>
-
-                {/* Question 5: What should we do? */}
-                <div className="p-4 rounded-lg bg-[#141817] border border-[#A8C83A]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div>
-                    <div className="text-[10px] font-mono font-bold text-[#A8C83A] uppercase">
-                      QUESTION 5 · WHAT SHOULD WE DO?
-                    </div>
-                    <div className="text-sm font-semibold text-[#F1F3EE] mt-0.5">
-                      Recalibrate Damper Trim to <strong className="text-[#A8C83A]">1.042</strong>
-                    </div>
-                    <div className="text-[11px] text-[#929A95] mt-0.5">
-                      Trims excess fuel ratio by 4.2%; expected abatement: -14.2 tCO₂e/day (-28.6 kg NOx/day).
-                    </div>
-                  </div>
-
-                  <Link
-                    href="/simulator"
-                    className="px-3.5 py-2 rounded bg-[#080A09] hover:bg-[#1D2320] border border-[#A8C83A]/60 text-xs font-mono font-bold text-[#A8C83A] hover:text-[#C4DF61] transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
-                  >
-                    <span>SIMULATE SETPOINT</span>
-                    <ArrowRight size={13} />
-                  </Link>
-                </div>
-              </div>
-
-              {/* ── 5-STEP REASONING CHAIN ──────────────────────── */}
-              <div className="space-y-4 pt-2">
-                <div className="text-xs font-bold uppercase tracking-wider text-zinc-200">
-                  Closed-Loop Causal Traversal
-                </div>
-
-                {/* 1. ANOMALY */}
-                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-1">
-                  <div className="text-[10px] font-mono font-bold text-[#A8C83A] uppercase">
-                    1. ANOMALY SIGNATURE
-                  </div>
-                  <h4 className="text-sm font-semibold text-zinc-100">
-                    {detail.incident_type?.toUpperCase().replace('_', ' ')}: {detail.root_cause}
-                  </h4>
-                  <p className="text-xs text-[#929A95] leading-relaxed">
-                    {detail.evidence}
-                  </p>
-                </div>
-
-                {/* 2. CAUSE */}
-                <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-1">
-                  <div className="text-[10px] font-mono font-bold text-amber-400 uppercase">
-                    2. PHYSICAL CAUSAL MECHANISM
-                  </div>
-                  <div className="text-xs text-zinc-200 font-medium">
-                    {detail.likely_mechanism}
-                  </div>
-                  <div className="mt-2 flex items-center gap-2 flex-wrap text-[10px]">
-                    <span className="text-zinc-500 font-sans">Affected Systems:</span>
-                    {detail.affected_systems?.map((sys: string) => (
-                      <span key={sys} className="px-2 py-0.5 rounded bg-[#141817] text-zinc-300 border border-[#242A27] font-mono">
-                        {sys}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 3. IMPACT (Timeline) */}
-                {detail.timeline && detail.timeline.length > 0 && (
-                  <div className="p-3.5 rounded-lg bg-[#080A09] border border-[#242A27] space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-[10px] font-mono font-bold text-[#A8C83A] uppercase">
-                        3. INCIDENT TIMELINE & OUTLIER DETECTION
-                      </span>
-                      <span className="text-[10px] font-mono text-red-400">
-                        ● Outlier Marker
-                      </span>
-                    </div>
-
-                    <div className="h-40 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={detail.timeline.map((t: any) => ({
-                            date: t.date?.slice(5),
-                            co2: t.co2_tonnes,
-                            isAnomaly: t.is_anomaly_day,
-                          }))}
-                          margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
-                        >
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#181E1C" />
-                          <XAxis
-                            dataKey="date"
-                            tick={{ fill: '#626A65', fontSize: 10, fontFamily: 'monospace' }}
-                            axisLine={{ stroke: '#242A27' }}
-                            tickLine={false}
-                          />
-                          <YAxis
-                            tick={{ fill: '#626A65', fontSize: 10, fontFamily: 'monospace' }}
-                            axisLine={{ stroke: '#242A27' }}
-                            tickLine={false}
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: '#0E1110',
-                              borderColor: '#242A27',
-                              borderRadius: '6px',
-                              fontFamily: 'monospace',
-                              fontSize: '11px',
-                            }}
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="co2"
-                            name="CO₂ (t)"
-                            stroke="#A8C83A"
-                            strokeWidth={2}
-                            dot={(props: any) => {
-                              if (props.payload.isAnomaly) {
-                                return (
-                                  <circle
-                                    key={props.key}
-                                    cx={props.cx}
-                                    cy={props.cy}
-                                    r={5}
-                                    fill="#DC2626"
-                                    stroke="#F1F3EE"
-                                    strokeWidth={2}
-                                  />
-                                );
-                              }
-                              return <circle key={props.key} cx={props.cx} cy={props.cy} r={2} fill="#A8C83A" />;
-                            }}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. ACTION */}
-                <div className="p-4 rounded-lg bg-[#080A09] border border-[#242A27] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div>
-                    <div className="text-[10px] font-mono font-bold text-[#A8C83A] uppercase">
-                      4. RECOMMENDED INTERVENTION
-                    </div>
-                    <div className="text-sm font-semibold text-zinc-100 mt-0.5">
-                      {detail.recommended_action}
-                    </div>
-                    <div className="text-[10px] text-[#929A95] font-sans mt-0.5">
-                      Intervention verified by thermodynamic simulation &bull; Expected CO₂e drop: 14.2 t/day
-                    </div>
-                  </div>
-
-                  <Link
-                    href="/simulator"
-                    className="px-3.5 py-2 rounded bg-[#141817] hover:bg-[#1a221e] border border-[#A8C83A]/50 text-xs font-mono font-bold text-[#A8C83A] transition-colors flex items-center gap-1.5 whitespace-nowrap"
-                  >
-                    <span>SIMULATE SETPOINT</span>
-                    <ArrowRight size={13} />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          ) : null}
+          <div className="hidden sm:flex items-center gap-3 text-[11px] text-[#626A65]">
+            <span>EQUIPMENT: Furnace F-101</span>
+            <span>·</span>
+            <span>FACILITY: Orion Refining Complex</span>
+          </div>
         </div>
       </div>
+
+      {/* ── Main Instrument Canvas ──────────────────────────────── */}
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-8 py-8 space-y-10">
+        {/* Instrument Title & Primary Question */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-6 border-b border-[#242A27]">
+          <div className="space-y-1.5">
+            <div className="text-[10px] font-mono text-[#A8C83A] uppercase font-bold tracking-wider">
+              ANSWER-FIRST SCIENTIFIC REASONING INSTRUMENT
+            </div>
+            <h1 className="font-serif text-3xl sm:text-4xl text-[#F1F3EE] font-normal tracking-tight">
+              What is ONER seeing, and why?
+            </h1>
+            <p className="text-xs sm:text-sm text-[#929A95]">
+              Systematic anomaly decomposition across continuous stack CEMS telemetry, downwind ambient air, and deterministic causal domain rules.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              href={`/simulator?case=${caseId}`}
+              className="px-4 py-2.5 rounded bg-[#141817] hover:bg-[#1D2320] border border-[#A8C83A]/60 text-xs font-mono font-bold text-[#A8C83A] flex items-center gap-2 transition-all shadow-sm"
+            >
+              <span>RUN SIMULATION</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </div>
+
+        {/* ── QUESTION 01: WHAT WAS UNUSUAL? ───────────────────────── */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="px-2 py-0.5 rounded-[2px] bg-[#141817] text-[#A8C83A] font-mono text-xs font-bold border border-[#A8C83A]/30">
+              QUESTION 01
+            </span>
+            <h2 className="text-lg font-bold text-[#F1F3EE] tracking-tight">
+              What Was Unusual?
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Primary Deviations (5 cols) */}
+            <div className="lg:col-span-5 p-5 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-4">
+              <div className="text-xs font-mono uppercase tracking-wider text-[#929A95]">
+                Primary Sensor Deviations
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 font-mono">
+                <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27] space-y-1">
+                  <div className="text-[10px] text-[#929A95] uppercase">NOx Concentration</div>
+                  <div className="text-2xl font-bold text-[#F1F3EE]">+31.4%</div>
+                  <div className="text-[10px] text-amber-400">131.4 mg/Nm³ (Limit: 100)</div>
+                </div>
+
+                <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27] space-y-1">
+                  <div className="text-[10px] text-[#929A95] uppercase">Flue Temperature</div>
+                  <div className="text-2xl font-bold text-[#F1F3EE]">+18.4°C</div>
+                  <div className="text-[10px] text-[#929A95]">Thermal exhaust delta</div>
+                </div>
+
+                <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27] space-y-1">
+                  <div className="text-[10px] text-[#929A95] uppercase">Air/Fuel Ratio</div>
+                  <div className="text-2xl font-bold text-amber-400">0.94</div>
+                  <div className="text-[10px] text-[#626A65]">Sub-stoichiometric</div>
+                </div>
+
+                <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27] space-y-1">
+                  <div className="text-[10px] text-[#929A95] uppercase">Ambient PM2.5</div>
+                  <div className="text-2xl font-bold text-[#F1F3EE]">+22.7%</div>
+                  <div className="text-[10px] text-[#929A95]">73.6 µg/m³ at AQ-04</div>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded bg-[#141817] border border-[#242A27] space-y-1">
+                <div className="flex items-center justify-between text-[11px] font-mono">
+                  <span className="text-[#626A65] uppercase">Metric Isolation</span>
+                  <span className="text-[#A8C83A] font-bold">ANOMALY SCORE: 0.884</span>
+                </div>
+                <p className="text-[11px] text-[#929A95] leading-relaxed">
+                  How unusual this operating condition is relative to learned normal patterns (Isolation Forest algorithm across 200 estimators). Not a probability or certainty percentage.
+                </p>
+              </div>
+            </div>
+
+            {/* Distribution Curve (7 cols) */}
+            <div className="lg:col-span-7 p-5 rounded-lg bg-[#0E1110] border border-[#242A27] flex flex-col justify-between space-y-4">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-[#929A95] uppercase tracking-wider">
+                  90-Day Operating Baseline Envelope vs Current Anomaly
+                </span>
+                <span className="text-[#A8C83A] font-bold">Point 0.884 (Outlier)</span>
+              </div>
+
+              <div className="h-44 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={distributionData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="curveGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#A8C83A" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#A8C83A" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#181E1C" />
+                    <XAxis
+                      dataKey="score"
+                      stroke="#626A65"
+                      tick={{ fill: '#626A65', fontSize: 10, fontFamily: 'monospace' }}
+                    />
+                    <YAxis
+                      stroke="#626A65"
+                      tick={{ fill: '#626A65', fontSize: 10, fontFamily: 'monospace' }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#080A09',
+                        borderColor: '#242A27',
+                        fontSize: '11px',
+                        fontFamily: 'monospace',
+                      }}
+                    />
+                    <ReferenceLine x={0.884} stroke="#A8C83A" strokeWidth={2} label={{ value: '0.884', fill: '#A8C83A', fontSize: 11 }} />
+                    <Area
+                      type="monotone"
+                      dataKey="density"
+                      stroke="#A8C83A"
+                      strokeWidth={1.5}
+                      fillOpacity={1}
+                      fill="url(#curveGrad)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] font-mono text-[#626A65] pt-2 border-t border-[#181E1C]">
+                <span>0.0 Normal Operating Envelope</span>
+                <span>0.6 Warning Threshold</span>
+                <span className="text-[#A8C83A]">0.884 Critical Outlier Condition</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── QUESTION 02: IS THE OBSERVATION SUPPORTED? ──────────── */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <span className="px-2 py-0.5 rounded-[2px] bg-[#141817] text-[#A8C83A] font-mono text-xs font-bold border border-[#A8C83A]/30">
+                QUESTION 02
+              </span>
+              <h2 className="text-lg font-bold text-[#F1F3EE] tracking-tight">
+                Is The Observation Supported?
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-2 font-mono text-xs">
+              <span className="text-[#929A95] uppercase">Corroboration Score:</span>
+              <span className="text-base font-bold text-[#A8C83A]">89.4 / 100</span>
+              <span className="text-[10px] text-[#626A65]">(Evidence Agreement Score)</span>
+            </div>
+          </div>
+
+          <div className="p-5 sm:p-6 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
+              <span className="text-[#929A95]">
+                Convergence of Six Independent Physical and Telemetric Signal Streams:
+              </span>
+              <span className="text-[#626A65] text-[11px]">
+                This is an evidence-agreement score across sensor layers, not a probability that the report is true.
+              </span>
+            </div>
+
+            {/* Convergence Chain Instrument */}
+            <ConvergenceChain
+              coreScore={89.4}
+              isAutoplay={true}
+            />
+          </div>
+        </section>
+
+        {/* ── QUESTION 03: HOW DID ONER REASON? ────────────────────── */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="px-2 py-0.5 rounded-[2px] bg-[#141817] text-[#A8C83A] font-mono text-xs font-bold border border-[#A8C83A]/30">
+              QUESTION 03
+            </span>
+            <h2 className="text-lg font-bold text-[#F1F3EE] tracking-tight">
+              How Did ONER Reason?
+            </h2>
+          </div>
+
+          {/* Reasoning Trace: Flow / Alluvial Ribbon Architecture */}
+          <ReasoningTrace anomalyScore={0.884} supportScore={99.4} />
+        </section>
+
+        {/* ── QUESTION 04: LIKELY CAUSE? ───────────────────────────── */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="px-2 py-0.5 rounded-[2px] bg-[#141817] text-[#A8C83A] font-mono text-xs font-bold border border-[#A8C83A]/30">
+              QUESTION 04
+            </span>
+            <h2 className="text-lg font-bold text-[#F1F3EE] tracking-tight">
+              Likely Cause?
+            </h2>
+          </div>
+
+          <div className="p-5 sm:p-6 rounded-lg bg-[#0E1110] border border-[#242A27] grid grid-cols-1 md:grid-cols-12 gap-6">
+            <div className="md:col-span-8 space-y-3">
+              <div className="text-[10px] font-mono font-bold text-[#A8C83A] uppercase tracking-wider">
+                PRIMARY CAUSAL DIAGNOSIS
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold text-[#F1F3EE]">
+                Burner Refractory Fouling & Stoichiometric Combustion Imbalance
+              </h3>
+              <p className="text-xs sm:text-sm text-[#929A95] leading-relaxed">
+                Natural gas combustion instability combined with refractory thermal lining degradation is creating incomplete combustion at Furnace F-101. The sub-stoichiometric air-fuel ratio (0.94) starves combustion of excess oxygen, while elevated stack exit temperature (+18.4°C) confirms loss of radiant heat transfer efficiency into the process charge.
+              </p>
+
+              <div className="pt-3 border-t border-[#181E1C] grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+                <div>
+                  <div className="text-[#626A65] text-[10px] uppercase">EQUIPMENT</div>
+                  <div className="text-[#F1F3EE] font-medium">Furnace F-101 Stack</div>
+                </div>
+                <div>
+                  <div className="text-[#626A65] text-[10px] uppercase">AFFECTED SYSTEM</div>
+                  <div className="text-[#F1F3EE] font-medium">Natural Gas Combustion Loop</div>
+                </div>
+                <div>
+                  <div className="text-[#626A65] text-[10px] uppercase">URGENCY LEVEL</div>
+                  <div className="text-red-400 font-bold">HIGH · PACT BREACH</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="md:col-span-4 p-4 rounded bg-[#080A09] border border-[#242A27] flex flex-col justify-between space-y-3">
+              <div className="space-y-1">
+                <div className="text-[10px] font-mono text-[#626A65] uppercase">
+                  ROOT-CAUSE SUPPORT
+                </div>
+                <div className="text-3xl font-bold font-mono text-[#A8C83A]">
+                  99.4 <span className="text-xs font-normal text-[#929A95]">/ 100</span>
+                </div>
+                <div className="text-[10px] font-mono text-[#626A65]">
+                  Deterministic domain score · Not a probability
+                </div>
+              </div>
+
+              <div className="space-y-1.5 text-[11px] text-[#929A95] pt-2 border-t border-[#181E1C]">
+                <div className="flex items-center justify-between">
+                  <span>Thermodynamic Rules:</span>
+                  <span className="text-[#F1F3EE] font-mono font-bold">100% agreement</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Sensor Correlation:</span>
+                  <span className="text-[#F1F3EE] font-mono font-bold">98.8% agreement</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Historical Recurrence:</span>
+                  <span className="text-[#F1F3EE] font-mono font-bold">Consistent</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── QUESTION 05: WHAT SHOULD WE DO? ───────────────────────── */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="px-2 py-0.5 rounded-[2px] bg-[#141817] text-[#A8C83A] font-mono text-xs font-bold border border-[#A8C83A]/30">
+              QUESTION 05
+            </span>
+            <h2 className="text-lg font-bold text-[#F1F3EE] tracking-tight">
+              What Should We Do?
+            </h2>
+          </div>
+
+          <div className="p-5 sm:p-6 rounded-lg bg-[#0E1110] border-2 border-[#A8C83A]/60 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold uppercase text-[#A8C83A] tracking-wider">
+                  RECOMMENDED CORRECTIVE INTERVENTION
+                </span>
+                <span className="text-xs text-[#626A65]">·</span>
+                <span className="text-[10px] font-mono text-[#929A95]">WORK ORDER #WO-8821</span>
+              </div>
+              <h3 className="text-xl font-bold text-[#F1F3EE]">
+                Execute Damper Trim Compensation to 1.042
+              </h3>
+              <p className="text-xs text-[#929A95] max-w-2xl leading-relaxed">
+                Recalibrate air damper trim on Burner F-101B from 1.000 to 1.042 to restore excess oxygen to stoichiometric optimum (1.05 excess air ratio). This will normalize flue gas velocity, eliminate soot emissions, and restore radiant heat transfer.
+              </p>
+
+              <div className="flex items-center gap-4 text-xs font-mono pt-1">
+                <div>
+                  <span className="text-[#626A65]">CURRENT SETPOINT: </span>
+                  <span className="text-[#F1F3EE] font-bold">1.000</span>
+                </div>
+                <div>
+                  <span className="text-[#626A65]">RECOMMENDED: </span>
+                  <span className="text-[#A8C83A] font-bold">1.042 (+4.2% trim)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="shrink-0 flex flex-col gap-2">
+              <Link
+                href={`/simulator?case=${caseId}`}
+                className="px-6 py-3 rounded bg-[#A8C83A] hover:bg-[#b8d844] text-[#080A09] font-mono font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(168,200,58,0.2)]"
+              >
+                <span>RUN SIMULATION →</span>
+              </Link>
+              <span className="text-[10px] font-mono text-[#626A65] text-center">
+                Evaluate counterfactual delta before applying
+              </span>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* ── Footer ──────────────────────────────────────────────── */}
+      <footer className="border-t border-[#181E1C] bg-[#0E1110] mt-auto">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono text-[#626A65]">
+          <div className="flex items-center gap-2">
+            <span>ISOLATION FOREST (200 TREES)</span>
+            <span>·</span>
+            <span>DETERMINISTIC CAUSAL GRAPH</span>
+            <span>·</span>
+            <span>CEMS PS-2 SPEC</span>
+          </div>
+          <div>
+            <DemoTag label="Demo data · Simulated telemetry · Prototype workflow" />
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
 
 export default function InvestigationPage() {
   return (
-    <AppLayout
-      title="AI Investigation"
-      subtitle="Isolation Forest Anomaly & Deterministic Root-Cause Analysis"
-    >
-      <Suspense fallback={<div className="p-8 text-center text-xs font-mono text-zinc-400">Loading AI Investigation...</div>}>
-        <InvestigationContent />
-      </Suspense>
-    </AppLayout>
+    <Suspense fallback={<div className="min-h-screen bg-[#080A09] text-white p-8">Loading investigation instrument...</div>}>
+      <InvestigationInner />
+    </Suspense>
   );
 }
