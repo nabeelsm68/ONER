@@ -56,6 +56,17 @@ export default function HomePage() {
       return;
     }
 
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (loopTimerRef.current) clearTimeout(loopTimerRef.current);
+      } else {
+        // Trigger next step cleanly when visible
+        setAnimStage((prev) => (prev >= 8 ? 0 : prev + 1));
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     const stageTimings = [
       1200, // 0 -> 1 (Field observation)
       800,  // 1 -> 2 (Seed travels to Horizon)
@@ -85,6 +96,7 @@ export default function HomePage() {
 
     return () => {
       if (loopTimerRef.current) clearTimeout(loopTimerRef.current);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [animStage, isPlaying, cycleCount]);
 
@@ -231,7 +243,7 @@ export default function HomePage() {
 
                   {/* Optical Scan Line */}
                   <div className="flex items-center justify-between text-[9px] font-mono text-[#A8B0A8]">
-                    <span>CEMS · AQ-04 SYNC</span>
+                    <span>SIMULATED TELEMETRY · AQ-04</span>
                     <span className="text-[#C4DF61] font-semibold">REC ●</span>
                   </div>
 
@@ -248,7 +260,7 @@ export default function HomePage() {
 
                   <div className="text-[9px] font-mono text-[#8C9A8E] flex justify-between">
                     <span>17.4399° N, 78.3845° E</span>
-                    <span>12m GPS</span>
+                    <span>±12m (est GPS)</span>
                   </div>
                 </div>
 
@@ -528,31 +540,35 @@ export default function HomePage() {
 
             {/* Hairline Register Rows */}
             <div className="divide-y divide-[#181E1C] border-y border-[#242A27]">
-              {SEED_CASES.map((row) => (
-                <div
-                  key={row.id}
-                  className={`py-3 flex items-center justify-between text-xs transition-colors px-2 ${
-                    row.id === '00421'
-                      ? 'bg-[#0E1110] border-l-2 border-l-[#A8C83A]'
-                      : 'hover:bg-[#0E1110]'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-[11px] text-[#A8C83A] font-semibold">{row.id}</span>
-                    <span className="font-medium text-[#F1F3EE]">{row.label}</span>
-                  </div>
+              {SEED_CASES.map((row) => {
+                const targetHref = row.id === '00421' ? '/case/COMM-2026-00421?level=control' : '/community';
+                return (
+                  <Link
+                    key={row.id}
+                    href={targetHref}
+                    className={`py-3 flex items-center justify-between text-xs transition-colors px-2 block group cursor-pointer ${
+                      row.id === '00421'
+                        ? 'bg-[#0E1110] border-l-2 border-l-[#A8C83A]'
+                        : 'hover:bg-[#0E1110]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-mono text-[11px] text-[#A8C83A] font-semibold">{row.id}</span>
+                      <span className="font-medium text-[#F1F3EE] group-hover:text-[#A8C83A] transition-colors">{row.label}</span>
+                    </div>
 
-                  <div className="flex items-center gap-4">
-                    <CompactChain signals={row.signals} />
-                    <span className="font-mono text-[11px] text-[#F1F3EE] w-12 text-right">
-                      {row.score}
-                    </span>
-                    <span className="text-[11px] text-[#929A95] hidden md:inline w-32 text-right">
-                      {row.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                    <div className="flex items-center gap-4">
+                      <CompactChain signals={row.signals} />
+                      <span className="font-mono text-[11px] text-[#F1F3EE] w-12 text-right">
+                        {row.score}
+                      </span>
+                      <span className="text-[11px] text-[#929A95] hidden md:inline w-32 text-right">
+                        {row.status}
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </section>

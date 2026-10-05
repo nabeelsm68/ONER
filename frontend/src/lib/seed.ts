@@ -212,3 +212,12 @@ export const DEMO_TAGS = {
   illustrative: 'Illustrative economic model · Not financial advice',
   mrvPending: 'MRV ready · Third-party verification pending',
 };
+
+/**
+ * Ensures presentation layer always displays the canonical facility name
+ * even if legacy backend endpoints return "Orion Manufacturing Plant".
+ */
+export function normalizeFacilityName(name?: string | null): string {
+  if (!name || name === 'Orion Manufacturing Plant') return 'Orion Refining Complex';
+  return name;
+}

@@ -14,6 +14,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { EnvironmentalImpactReport as EnvironmentalImpactReportType } from '@/lib/api';
+import { normalizeFacilityName } from '@/lib/seed';
 
 interface EnvironmentalImpactReportProps {
   report: EnvironmentalImpactReportType;
@@ -125,7 +126,7 @@ export default function EnvironmentalImpactReport({
           <div className="text-right sm:text-right">
             <div className="text-[10px] uppercase font-sans text-[#929A95]">Facility & Target</div>
             <div className="text-xs font-semibold text-zinc-200">
-              {report.facility_name}
+              {normalizeFacilityName(report.facility_name)}
             </div>
             <div className="text-[11px] font-mono text-[#929A95]">
               {report.likely_source}

@@ -9,6 +9,7 @@ import DemoTag from '@/components/primitives/DemoTag';
 import { CompactChain } from '@/components/chain';
 import { ReductionWedge } from '@/components/primitives';
 import { api, GovernmentOverview, CommunityReport } from '@/lib/api';
+import { normalizeFacilityName } from '@/lib/seed';
 import {
   ShieldCheck,
   Building2,
@@ -141,6 +142,25 @@ function GovernmentInner() {
   const closeCaseDrawer = () => {
     setDrawerOpen(false);
   };
+
+  // Close drawer on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && drawerOpen) {
+        closeCaseDrawer();
+      }
+    };
+    if (drawerOpen) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [drawerOpen]);
 
   const handleMandateAction = async (actionType: string) => {
     if (!selectedCase) return;
@@ -285,7 +305,7 @@ function GovernmentInner() {
                     <td className="py-3 px-4 font-bold text-[#F1F3EE] group-hover:text-[#A8C83A]">
                       {c.id}
                     </td>
-                    <td className="py-3 px-4 text-[#F1F3EE]">{c.facility}</td>
+                    <td className="py-3 px-4 text-[#F1F3EE]">{normalizeFacilityName(c.facility)}</td>
                     <td className="py-3 px-4 text-[#929A95]">{c.sector}</td>
                     <td className="py-3 px-4">
                       <span
@@ -345,7 +365,7 @@ function GovernmentInner() {
                 </div>
 
                 <div className="space-y-1">
-                  <div className="text-sm font-bold text-[#F1F3EE]">{stalled.facility}</div>
+                  <div className="text-sm font-bold text-[#F1F3EE]">{normalizeFacilityName(stalled.facility)}</div>
                   <div className="text-xs text-[#929A95]">{stalled.sector}</div>
                 </div>
 
@@ -474,7 +494,7 @@ function GovernmentInner() {
                 </h3>
               </div>
               <span className="text-[10px] font-mono text-[#626A65] border border-[#242A27] px-2 py-0.5 rounded">
-                REPRESENTATIVE (DEMO DATA)
+                REPRESENTATIVE SECTOR 4 GEOSPATIAL CLUSTERING · DEMO DATA
               </span>
             </div>
 
@@ -586,7 +606,12 @@ function GovernmentInner() {
           />
 
           {/* Drawer Canvas */}
-          <div className="relative w-full max-w-xl bg-[#0E1110] border-l border-[#242A27] h-full overflow-y-auto p-6 sm:p-8 space-y-6 z-10 shadow-2xl animate-in slide-in-from-right duration-300 text-[#F1F3EE]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Government Case Dossier Drawer"
+            className="relative w-full max-w-xl bg-[#0E1110] border-l border-[#242A27] h-full overflow-y-auto p-6 sm:p-8 space-y-6 z-10 shadow-2xl animate-in slide-in-from-right duration-300 text-[#F1F3EE]"
+          >
             {/* Drawer Header */}
             <div className="flex items-start justify-between pb-4 border-b border-[#242A27]">
               <div>
@@ -599,7 +624,7 @@ function GovernmentInner() {
                   </span>
                 </div>
                 <h3 className="text-lg font-bold text-[#F1F3EE] mt-1">
-                  {selectedCase.facility}
+                  {normalizeFacilityName(selectedCase.facility)}
                 </h3>
                 <div className="text-xs text-[#929A95] font-mono">
                   {selectedCase.sector} · {selectedCase.coordinates.lat}°N, {selectedCase.coordinates.lng}°E
@@ -671,7 +696,7 @@ function GovernmentInner() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-mono">
                 <span className="text-[#929A95] uppercase">Auditable Event Trail</span>
-                <span className="text-[10px] text-[#626A65]">PROTOTYPE AUDIT LOG</span>
+                <span className="text-[10px] text-[#A8C83A]">AUDITABLE EVENT TRAIL · PROTOTYPE WORKFLOW</span>
               </div>
 
               <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27] space-y-2.5 text-xs font-mono">

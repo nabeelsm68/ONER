@@ -41,8 +41,8 @@ export default function ImpactPage() {
       try {
         const res = await api.getImpactModel();
         setModel(res);
-      } catch (err) {
-        console.error('Impact model load error:', err);
+      } catch {
+        // Fallback to local interactive defaults if API endpoint unavailable
       }
     }
     load();

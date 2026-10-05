@@ -28,8 +28,8 @@ export default function AnalyticsPage() {
     try {
       const res = await api.analytics(days);
       setData(res);
-    } catch (err) {
-      console.error('Analytics load error:', err);
+    } catch {
+      // API fallback handled gracefully in render
     } finally {
       setLoading(false);
     }

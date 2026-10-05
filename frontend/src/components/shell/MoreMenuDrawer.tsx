@@ -207,7 +207,7 @@ export default function MoreMenuDrawer({ isOpen, onClose }: MoreMenuDrawerProps)
         {/* Footer */}
         <div className="p-4 border-t border-[var(--line)] bg-[var(--surface)] select-none">
           <div className="text-[10px] font-mono text-[var(--ink-3)] text-center">
-            ONER · Environmental Command Center · v2.4
+            ONER · Environmental Intelligence & Accountability Network
           </div>
         </div>
       </div>

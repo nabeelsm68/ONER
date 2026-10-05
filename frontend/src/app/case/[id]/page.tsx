@@ -9,7 +9,7 @@ import StateMark from '@/components/primitives/StateMark';
 import DemoTag from '@/components/primitives/DemoTag';
 import { ConvergenceChain, CompactChain } from '@/components/chain';
 import { api, CommunityReport } from '@/lib/api';
-import { CANONICAL_CASE } from '@/lib/seed';
+import { CANONICAL_CASE, normalizeFacilityName } from '@/lib/seed';
 import { useAtmosphere } from '@/lib/atmosphere';
 import {
   MapPin,
@@ -96,7 +96,7 @@ export default function CaseDetailPage({
   // Use real backend data if present, otherwise fall back to canonical seed
   const displayTitle = report?.title || CANONICAL_CASE.title;
   const displayEquipment = report?.likely_source || CANONICAL_CASE.equipment;
-  const displayFacility = report?.correlated_facility || CANONICAL_CASE.facility;
+  const displayFacility = normalizeFacilityName(report?.correlated_facility) || CANONICAL_CASE.facility;
   const displayLocation = report?.location_name || CANONICAL_CASE.locationName;
   const displayTimestamp = report?.timestamp_formatted || CANONICAL_CASE.timestamp;
   const displayPhotoUrl = report?.photo_url || '/evidence/smoke_plume_01.jpg';
@@ -358,13 +358,34 @@ export default function CaseDetailPage({
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/investigation?case=${caseId}`}
+                  className="px-3 py-1.5 rounded-[2px] bg-[#141817] hover:bg-[#1A201E] border border-[#242A27] text-xs font-mono text-[#929A95] hover:text-[#F1F3EE] transition-colors inline-flex items-center gap-1.5"
+                >
+                  <AlertTriangle size={12} className="text-[#A8C83A]" />
+                  <span>Investigate</span>
+                </Link>
                 <Link
                   href={`/simulator?case=${caseId}`}
                   className="px-3 py-1.5 rounded-[2px] bg-[#141817] hover:bg-[#1A201E] border border-[#242A27] text-xs font-mono text-[#F1F3EE] transition-colors inline-flex items-center gap-1.5"
                 >
-                  <SlidersHorizontal size={13} className="text-[#A8C83A]" />
-                  <span>Open Simulator</span>
+                  <SlidersHorizontal size={12} className="text-[#A8C83A]" />
+                  <span>Simulator</span>
+                </Link>
+                <Link
+                  href={`/industry?case=${caseId}`}
+                  className="px-3 py-1.5 rounded-[2px] bg-[#141817] hover:bg-[#1A201E] border border-[#242A27] text-xs font-mono text-[#929A95] hover:text-[#F1F3EE] transition-colors inline-flex items-center gap-1.5"
+                >
+                  <Wrench size={12} className="text-[#A8C83A]" />
+                  <span>Industry</span>
+                </Link>
+                <Link
+                  href={`/carbon?case=${caseId}`}
+                  className="px-3 py-1.5 rounded-[2px] bg-[#141817] hover:bg-[#1A201E] border border-[#242A27] text-xs font-mono text-[#929A95] hover:text-[#F1F3EE] transition-colors inline-flex items-center gap-1.5"
+                >
+                  <CheckCircle2 size={12} className="text-[#A8C83A]" />
+                  <span>Carbon / MRV</span>
                 </Link>
               </div>
             </div>
