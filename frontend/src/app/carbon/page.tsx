@@ -283,11 +283,11 @@ function CarbonInner() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs font-mono">
               <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27] space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-[#F1F3EE] font-bold">1. Optical CEMS Probe Stream</span>
+                  <span className="text-[#F1F3EE] font-bold">1. Optical CEMS Stream (Station #2)</span>
                   <span className="text-[#A8C83A]">ALIGNED</span>
                 </div>
                 <p className="text-[11px] text-[#929A95] font-sans">
-                  EPA PS-2 continuous stack probe records NOx returned to 88.5 mg/Nm³ (below 100 limit).
+                  EPA PS-2 continuous stack probe records NOx returned to 88.5 mg/Nm³ (below 100 limit). Simulated telemetry stream.
                 </p>
               </div>
 
@@ -297,7 +297,7 @@ function CarbonInner() {
                   <span className="text-[#A8C83A]">ALIGNED</span>
                 </div>
                 <p className="text-[11px] text-[#929A95] font-sans">
-                  Exhaust temperature drop of -18.4°C confirms restoration of internal heat exchange.
+                  Exhaust temperature drop of -18.4°C confirms restoration of internal heat exchange. Simulated telemetry stream.
                 </p>
               </div>
 
@@ -307,7 +307,7 @@ function CarbonInner() {
                   <span className="text-[#A8C83A]">ALIGNED</span>
                 </div>
                 <p className="text-[11px] text-[#929A95] font-sans">
-                  Camera and perimeter optical transmissometer show stack plume opacity normalized below 5%.
+                  Camera and perimeter optical transmissometer show stack plume opacity normalized below 5%. Simulated telemetry stream.
                 </p>
               </div>
 
@@ -317,17 +317,17 @@ function CarbonInner() {
                   <span className="text-[#A8C83A]">ALIGNED</span>
                 </div>
                 <p className="text-[11px] text-[#929A95] font-sans">
-                  Air/fuel ratio telemetry shifted from 0.94 to 1.05 design optimum; unburnt hydrocarbons cleared.
+                  Air/fuel ratio telemetry shifted from 0.94 to 1.05 simulated design optimum; unburnt hydrocarbons cleared.
                 </p>
               </div>
 
               <div className="p-3.5 rounded bg-[#080A09] border border-[#242A27] space-y-1 md:col-span-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[#F1F3EE] font-bold">5. Third-Party Independent Audit Package</span>
-                  <span className="text-amber-400">PENDING AUDIT</span>
+                  <span className="text-amber-400 font-bold">PENDING AUDIT</span>
                 </div>
                 <p className="text-[11px] text-[#929A95] font-sans">
-                  Digital audit dossier assembled with raw 10-second CEMS logs, maintenance work order #WO-8821, and Pact Clause 4.2 timestamp seals. Ready for certifying body review.
+                  Digital audit dossier assembled with raw 10-second CEMS logs, maintenance work order #WO-8821 (prototype workflow), and Pact Clause 4.2 timestamp seals under ISO 14064-2 guidelines. Third-party audit remains pending.
                 </p>
               </div>
             </div>

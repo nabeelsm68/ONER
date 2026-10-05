@@ -434,12 +434,15 @@ function InvestigationInner() {
                 </span>
                 <span className="text-xs text-[#626A65]">·</span>
                 <span className="text-[10px] font-mono text-[#929A95]">WORK ORDER #WO-8821</span>
+                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#141817] text-[#C4DF61] border border-[#A8C83A]/30">
+                  PROTOTYPE WORKFLOW
+                </span>
               </div>
               <h3 className="text-xl font-bold text-[#F1F3EE]">
                 Execute Damper Trim Compensation to 1.042
               </h3>
               <p className="text-xs text-[#929A95] max-w-2xl leading-relaxed">
-                Recalibrate air damper trim on Burner F-101B from 1.000 to 1.042 to restore excess oxygen to stoichiometric optimum (1.05 excess air ratio). This will normalize flue gas velocity, eliminate soot emissions, and restore radiant heat transfer.
+                Recalibrate air damper trim on Burner F-101B from 1.000 to 1.042 to restore excess oxygen to stoichiometric optimum (1.05 simulated target ratio). This will normalize flue gas velocity, eliminate soot emissions, and restore radiant heat transfer.
               </p>
 
               <div className="flex items-center gap-4 text-xs font-mono pt-1">
@@ -477,7 +480,7 @@ function InvestigationInner() {
             <span>·</span>
             <span>DETERMINISTIC CAUSAL GRAPH</span>
             <span>·</span>
-            <span>CEMS PS-2 SPEC</span>
+            <span>CEMS PS-2 SPEC (SIMULATED TELEMETRY)</span>
           </div>
           <div>
             <DemoTag label="Demo data · Simulated telemetry · Prototype workflow" />

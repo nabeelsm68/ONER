@@ -273,7 +273,7 @@ function SimulatorInner() {
                 </div>
                 <div className="flex items-center justify-between text-[#929A95]">
                   <span>Pact Non-Compliance Penalty Risk:</span>
-                  <span className="text-[#F1F3EE]">₹485,000 / month</span>
+                  <span className="text-[#F1F3EE]">₹485,000 / mo (Illustrative Policy Model)</span>
                 </div>
               </div>
             </div>
@@ -301,7 +301,7 @@ function SimulatorInner() {
                   Damper Trim Compensation to Air-Fuel Loop
                 </h3>
                 <p className="text-xs text-[#929A95] mt-1 leading-relaxed">
-                  Adjust secondary air trim damper to restore stoichiometric excess oxygen (1.05 ratio), restoring radiant flame temperature and resolving incomplete combustion.
+                  Adjust secondary air trim damper to restore stoichiometric excess oxygen (1.05 simulated target ratio), restoring radiant flame temperature and resolving incomplete combustion.
                 </p>
               </div>
 
@@ -424,7 +424,7 @@ function SimulatorInner() {
                   <span className="text-xs text-[#929A95]">/ mo</span>
                 </div>
                 <div className="text-[10px] text-[#626A65]">
-                  Pact incentive + avoided fuel waste
+                  Illustrative economic policy model
                 </div>
               </div>
             </div>
