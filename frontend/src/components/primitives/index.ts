@@ -7,3 +7,5 @@ export { default as Rail } from './Rail';
 export { default as Signal } from './Signal';
 export { default as ReductionWedge } from './ReductionWedge';
 export { default as ConvergenceChain } from './ConvergenceChain';
+export { default as IsolationStrip } from './IsolationStrip';
+export { default as WeightStrip } from './WeightStrip';

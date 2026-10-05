@@ -129,8 +129,8 @@ html, body {
 
 /* ── SVG Drawing & Keyframe Animations from oner-directions.html ── */
 .p {
-  stroke-dasharray: 400;
-  stroke-dashoffset: 400;
+  stroke-dasharray: 450;
+  stroke-dashoffset: 450;
   animation: dr 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -164,6 +164,40 @@ html, body {
   }
 }
 
+/* Traveling pulse along SVG stroke */
+@keyframes pulseTravel {
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+
+/* Horizon Line Wipe Effect */
+.horizon-transport-pulse {
+  background: linear-gradient(90deg, transparent, #A8C83A 50%, transparent);
+  background-size: 200% 100%;
+  animation: horizonPulse 1.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes horizonPulse {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 /* ── Accessibility: Reduced Motion ── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -171,7 +205,7 @@ html, body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .p, .f, .late {
+  .p, .f, .late, .horizon-transport-pulse {
     animation: none !important;
     stroke-dashoffset: 0 !important;
     transform: none !important;
@@ -235,7 +269,23 @@ html, body {
   outline-offset: 2px;
 }
 
-/* Hide next.js dev overlay indicator badge */
-[data-nextjs-toast], [data-next-dev-indicator], #nextjs-dev-indicator {
+/* ── Complete Suppression of All FPS Counters & Dev Overlays ── */
+[data-nextjs-toast],
+[data-next-dev-indicator],
+#nextjs-dev-indicator,
+[data-nextjs-dialog-overlay],
+[data-nextjs-portal],
+#fps,
+.fps,
+[data-fps],
+#fps-counter,
+.fps-counter,
+#stats,
+.stats,
+div[class*="fps" i],
+div[id*="fps" i] {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
