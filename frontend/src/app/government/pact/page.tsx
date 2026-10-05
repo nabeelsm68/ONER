@@ -158,8 +158,8 @@ export default function GovernmentPactPage() {
             <span className="font-mono text-[10px] uppercase font-bold text-[#F1F3EE]">
               Illustrative Financial Mechanism & Community Benefit Fund
             </span>
-            <span className="text-[10px] font-mono text-amber-400">
-              DEMO POLICY MODEL
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/30 font-bold">
+              ILLUSTRATIVE POLICY MODEL
             </span>
           </div>
 
