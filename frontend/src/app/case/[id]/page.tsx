@@ -2,17 +2,15 @@
 
 import React, { useEffect, useState, use } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import AppLayout from '@/components/AppLayout';
+import { useSearchParams, useRouter } from 'next/navigation';
+import AtmosphericShell from '@/components/shell/AtmosphericShell';
+import HorizonLine, { HorizonLevel } from '@/components/primitives/HorizonLine';
+import StateMark from '@/components/primitives/StateMark';
+import DemoTag from '@/components/primitives/DemoTag';
+import { ConvergenceChain, CompactChain } from '@/components/chain';
 import { api, CommunityReport } from '@/lib/api';
-import {
-  Horizon,
-  ConvergenceChain,
-  StateBadge,
-  Rail,
-  Signal,
-  ReductionWedge,
-} from '@/components/primitives';
+import { CANONICAL_CASE } from '@/lib/seed';
+import { useAtmosphere } from '@/lib/atmosphere';
 import {
   MapPin,
   Clock,
@@ -20,15 +18,12 @@ import {
   ShieldCheck,
   CheckCircle2,
   ArrowRight,
-  TrendingDown,
+  SlidersHorizontal,
   Wrench,
-  Award,
+  Check,
   AlertTriangle,
-  FileText,
-  User,
-  ExternalLink,
+  RotateCcw,
 } from 'lucide-react';
-import EvidenceTrustLayer from '@/components/EvidenceTrustLayer';
 
 export default function CaseDetailPage({
   params,
@@ -36,509 +31,621 @@ export default function CaseDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const resolvedParams = use(params);
-  const caseId = resolvedParams.id;
+  const rawId = resolvedParams.id;
+  const caseId = rawId.startsWith('COMM-2026-')
+    ? rawId
+    : `COMM-2026-${rawId.replace(/^COMM-2026-/, '').padStart(5, '0')}`;
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const levelParam = (searchParams.get('level') || 'control') as 'field' | 'control' | 'impact';
+  const { setAtmosphere } = useAtmosphere();
 
-  const [currentLevel, setCurrentLevel] = useState<'field' | 'control' | 'impact'>(levelParam);
+  const levelParam = (searchParams.get('level') || 'control') as HorizonLevel;
+  const [currentLevel, setCurrentLevel] = useState<HorizonLevel>(levelParam);
+
   const [report, setReport] = useState<CommunityReport | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [actionApplied, setActionApplied] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [actionApplied, setActionApplied] = useState<boolean>(false);
 
+  // Sync atmosphere with current level
   useEffect(() => {
-    setCurrentLevel(levelParam);
-  }, [levelParam]);
+    if (levelParam) {
+      setCurrentLevel(levelParam);
+      if (levelParam === 'field') {
+        setAtmosphere('field');
+      } else {
+        setAtmosphere('control');
+      }
+    }
+  }, [levelParam, setAtmosphere]);
+
+  const handleLevelChange = (lvl: HorizonLevel) => {
+    setCurrentLevel(lvl);
+    if (lvl === 'field') {
+      setAtmosphere('field');
+    } else {
+      setAtmosphere('control');
+    }
+    router.replace(`/case/${caseId}?level=${lvl}`, { scroll: false });
+  };
 
   useEffect(() => {
     async function loadCase() {
       try {
         setLoading(true);
-        const data = await api.getCommunityReport(caseId);
-        setReport(data);
+        let data: CommunityReport | null = null;
+        try {
+          data = await api.getCommunityReport(caseId);
+        } catch {
+          // If query with full prefix failed, try rawId
+          if (rawId !== caseId) {
+            data = await api.getCommunityReport(rawId);
+          }
+        }
+        if (data) {
+          setReport(data);
+        }
       } catch (err) {
-        console.warn('Could not fetch case from backend, loading seeded case:', err);
-        // Fallback to seeded demo case
-        setReport({
-          id: caseId || 'COMM-2026-00421',
-          title: 'Combustion Anomaly & Dark Smoke Plume',
-          category: 'SMOKE_EMISSIONS',
-          severity: 'HIGH',
-          description:
-            'Dense dark gray exhaust plume observed billowing intermittently from North Stack 04 with pungent sulfurous odor.',
-          latitude: 28.5355,
-          longitude: 77.391,
-          location_name: 'Boundary Sector 4 (Downwind North Processing Train)',
-          accuracy_meters: 4.2,
-          timestamp: new Date().toISOString(),
-          timestamp_formatted: 'Today at 14:28 UTC',
-          photo_url: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=600&auto=format&fit=crop',
-          status: 'RESOLVED',
-          corroboration_score: 89.4,
-          corroboration_status: 'CORROBORATED',
-          corroboration_summary:
-            'Community report corroborated by CEMS optical density spike (+157.9%), NOx surge (+31.4%), and burner temperature rise (+18.4°C).',
-          evidence_sources: [
-            'Citizen Photographic Evidence with EXIF Hash',
-            'Boundary Fence Ambient PM2.5 Sensor Array',
-            'Furnace F-101 Flue Gas CEMS Telemetry',
-            'Consensual GPS Geo-Boundary Verification',
-            '30-Day Historical Combustion Baseline',
-          ],
-          correlated_facility: 'Orion Refining Complex',
-          likely_source: 'Furnace F-101 (North Processing Train)',
-          root_cause: 'Natural gas combustion instability + burner refractory fouling',
-          telemetry_deviations: {
-            'NOx Stack Concentration': '131.4 mg/Nm³ (+31.4% excess)',
-            'Flue Gas Temperature': '348.4°C (+18.4°C deviation)',
-            'PM2.5 Sensor Downwind': '94.2 µg/m³ (+117% ambient spike)',
-            'Air-Fuel Stoichiometric Trim': '0.94 (Fuel-rich operating drift)',
-          },
-          recommended_action: 'Recalibrate Damper trim to 1.042; reset automated air-fuel stoichiometric loop',
-          reporter: {
-            name: 'Priya Sharma (Resident)',
-            trust_score: 94.2,
-            reports_submitted: 6,
-            corroborated_count: 5,
-            badge: 'Verified Community Observer',
-            points_awarded: 50,
-          },
-          industry_response: {
-            status: 'APPLIED & RESOLVED',
-            action_taken: 'Damper trim recalibrated to 1.042; air-fuel ratio normalized.',
-            engineer: 'Rajesh Nair, Lead Combustion Engineer',
-          },
-          government_status: {
-            status: 'INSPECTED & AUDITED',
-            officer: 'S. K. Verma, Regional Environmental Officer',
-            notes: 'Verified normalized CEMS telemetry and ISO 14064 MRV audit package.',
-            escalation_level: 'RESOLVED',
-          },
-          audit_trail: [
-            { time: '14:28:10 UTC', actor: 'Citizen', event: 'Photo & consensual GPS report filed' },
-            { time: '14:28:14 UTC', actor: 'ONER Engine', event: '89.4% Multi-source corroboration locked' },
-            { time: '14:32:00 UTC', actor: 'ONER Causal', event: 'Root cause identified: Burner fouling (99.4%)' },
-            { time: '14:45:00 UTC', actor: 'Industry DCS', event: 'Damper trim 1.042 setpoint applied' },
-            { time: '15:15:00 UTC', actor: 'ONER MRV', event: 'Restoration verified: -14.2 tCO₂e/day' },
-          ],
-          environmental_outcome: {
-            co2e_reduction_daily_tons: 14.2,
-            co2e_reduction_annual_tons: 5183,
-            nox_reduction_daily_kg: 28.6,
-            flue_temp_normalized: '330.0°C',
-          },
-        });
+        console.warn('Could not fetch case from backend, loading canonical seed:', err);
       } finally {
         setLoading(false);
       }
     }
     loadCase();
-  }, [caseId]);
+  }, [caseId, rawId]);
 
-  const handleApplyIntervention = async () => {
-    setActionApplied(true);
-    try {
-      await api.takeIndustryAction(caseId, 'INTERVENTION_APPLIED', 'Damper trim setpoint adjusted to 1.042 via DCS');
-    } catch {
-      // Local state update is sufficient for demo reliability
-    }
-  };
+  // Use real backend data if present, otherwise fall back to canonical seed
+  const displayTitle = report?.title || CANONICAL_CASE.title;
+  const displayEquipment = report?.likely_source || CANONICAL_CASE.equipment;
+  const displayFacility = report?.correlated_facility || CANONICAL_CASE.facility;
+  const displayLocation = report?.location_name || CANONICAL_CASE.locationName;
+  const displayTimestamp = report?.timestamp_formatted || CANONICAL_CASE.timestamp;
+  const displayPhotoUrl = report?.photo_url || '/evidence/smoke_plume_01.jpg';
+  const displayCorroboration = report?.corroboration_score || CANONICAL_CASE.scores.corroboration;
 
-  const actionRailSteps = [
-    {
-      id: 'ack',
-      label: 'Acknowledge',
-      sublabel: 'Observation Received',
-      status: 'complete' as const,
-      value: 'T+0s',
-    },
-    {
-      id: 'inv',
-      label: 'Investigate',
-      sublabel: 'Anomaly 0.884',
-      status: 'complete' as const,
-      value: '89.4%',
-    },
-    {
-      id: 'sim',
-      label: 'Simulate',
-      sublabel: 'Damper Trim 1.042',
-      status: 'complete' as const,
-      value: '-14.2 t/d',
-    },
-    {
-      id: 'act',
-      label: 'Apply Setpoint',
-      sublabel: actionApplied ? 'Applied to DCS' : 'Ready to apply',
-      status: actionApplied ? ('complete' as const) : ('active' as const),
-      value: 'Trim 1.042',
-    },
-    {
-      id: 'ver',
-      label: 'Verify MRV',
-      sublabel: 'CEMS Optical Check',
-      status: actionApplied ? ('complete' as const) : ('pending' as const),
-      value: '5,183 t/yr',
-    },
-    {
-      id: 'res',
-      label: 'Resolve',
-      sublabel: 'Citizen Informed',
-      status: actionApplied ? ('complete' as const) : ('pending' as const),
-      value: '+50 pts',
-    },
-  ];
+  const isField = currentLevel === 'field';
+  const isControl = currentLevel === 'control';
+  const isImpact = currentLevel === 'impact';
 
   return (
-    <AppLayout
-      title={`CASE · ${caseId}`}
-      subtitle={`${report?.correlated_facility || 'Orion Refining Complex'} · Environmental Incident Dossier`}
+    <div
+      className={`min-h-screen flex flex-col transition-colors duration-300 ${
+        isField ? 'bg-[#F4F3EC] text-[#1B211C]' : 'bg-[#080A09] text-[#F1F3EE]'
+      }`}
+      data-atmosphere={isField ? 'field' : 'control'}
     >
-      <div className="space-y-6 text-[#F1F3EE] max-w-7xl mx-auto pb-12">
-        {/* ── TOP CASE BANNER & STATE ────────────────────────────── */}
-        <div className="p-5 rounded-lg bg-[#0E1110] border border-[#242A27] flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-[#A8C83A] font-bold">
-                ENVIRONMENTAL CASE DOSSIER
-              </span>
-              <span className="text-[#626A65] font-mono">/</span>
-              <span className="font-mono text-xs text-[#929A95]">{caseId}</span>
-              <StateBadge state={report?.status || 'CORROBORATED'} size="sm" />
-            </div>
-            <h1 className="text-xl font-bold tracking-tight text-[#F1F3EE]">
-              {report?.title || 'Combustion Anomaly & Dark Smoke Plume'}
-            </h1>
-            <p className="text-xs text-[#929A95] font-mono">
-              Facility: {report?.correlated_facility || 'Orion Refining Complex'} · Source:{' '}
-              {report?.likely_source || 'Furnace F-101'}
-            </p>
+      {/* ── Top 56px Atmospheric Shell ───────────────────────── */}
+      <AtmosphericShell />
+
+      {/* ── Level Navigation Horizon Header ───────────────────── */}
+      <div className={`border-b select-none ${isField ? 'border-[#DAD8CC] bg-[#FBFAF5]' : 'border-[#242A27] bg-[#0E1110]'}`}>
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          {/* Case Identifier Breadcrumb */}
+          <div className="flex items-center gap-2.5 font-mono text-xs">
+            <Link
+              href="/community"
+              className={isField ? 'text-[#7B837C] hover:text-[#1B211C]' : 'text-[#929A95] hover:text-[#F1F3EE]'}
+            >
+              Cases
+            </Link>
+            <span className={isField ? 'text-[#DAD8CC]' : 'text-[#626A65]'}>/</span>
+            <span className="font-semibold">{caseId}</span>
+            <span className={isField ? 'text-[#DAD8CC]' : 'text-[#626A65]'}>·</span>
+            <span className={isField ? 'text-[#4F5851]' : 'text-[#929A95]'}>{displayEquipment}</span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Link
-              href="/report"
-              className="px-3 py-1.5 rounded bg-[#141817] hover:bg-[#1C221F] border border-[#242A27] text-xs font-mono text-[#F1F3EE] transition-colors"
-            >
-              + File New Report
-            </Link>
+          {/* Level Switcher (Field ── Control ── Impact) */}
+          <div className="flex items-center gap-1 font-mono text-xs p-0.5 rounded-[2px] border border-[var(--line)] bg-[var(--surface)]">
+            {(['field', 'control', 'impact'] as HorizonLevel[]).map((lvl) => {
+              const isActive = currentLevel === lvl;
+              return (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => handleLevelChange(lvl)}
+                  className={`px-3 py-1 rounded-[2px] uppercase text-[11px] tracking-wider transition-colors cursor-pointer ${
+                    isActive
+                      ? 'bg-[var(--raised)] text-[var(--accent-ink)] font-semibold shadow-xs'
+                      : 'text-[var(--ink-3)] hover:text-[var(--ink)]'
+                  }`}
+                >
+                  {lvl}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* ── HORIZON: TRANSITION (FIELD → CONTROL → IMPACT) ──────── */}
-        <Horizon
-          currentLevel={currentLevel}
-          caseId={caseId}
-          onSelectLevel={(lvl) => setCurrentLevel(lvl)}
-          showLabels={true}
+        {/* 1px Horizon Line dividing surface */}
+        <HorizonLine
+          activeLevel={currentLevel}
+          onLevelChange={handleLevelChange}
+          showLabels={false}
+          className="my-0"
         />
+      </div>
 
+      {/* ── Main Case Content Surface ─────────────────────────── */}
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-8 py-8 space-y-8">
         {/* ══════════════════════════════════════════════════════════
-            LEVEL 1: FIELD — "What happened with my report?"
-           ══════════════════════════════════════════════════════════ */}
-        {currentLevel === 'field' && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-              {/* Resident Photograph with EXIF & Quality */}
-              <div className="lg:col-span-5 p-5 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Camera size={15} className="text-[#A8C83A]" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-[#F1F3EE]">
-                      Field Evidence Capture
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/30">
-                    EVIDENCE COPY WITH CAPTURED METADATA
-                  </span>
-                </div>
-
-                {/* Evidence Image */}
-                <div className="relative aspect-video rounded overflow-hidden bg-[#080A09] border border-[#242A27]">
-                  <img
-                    src={report?.photo_url || 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=600&auto=format&fit=crop'}
-                    alt="Citizen Field Observation"
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-2 left-2 right-2 p-2 rounded bg-[#080A09]/80 backdrop-blur-sm border border-[#242A27] text-[10px] font-mono text-[#929A95] flex items-center justify-between">
-                    <span>GPS: 28.5355° N, 77.3910° E</span>
-                    <span className="text-[#A8C83A]">CONSENT CAPTURED</span>
-                  </div>
-                </div>
-
-                <div className="p-3 rounded bg-[#080A09] border border-[#242A27] space-y-1.5 text-xs">
-                  <div className="flex justify-between text-[#929A95]">
-                    <span>Location:</span>
-                    <span className="text-[#F1F3EE] font-mono">{report?.location_name}</span>
-                  </div>
-                  <div className="flex justify-between text-[#929A95]">
-                    <span>Timestamp:</span>
-                    <span className="text-[#F1F3EE] font-mono">{report?.timestamp_formatted}</span>
-                  </div>
-                  <div className="flex justify-between text-[#929A95]">
-                    <span>Accuracy:</span>
-                    <span className="text-[#A8C83A] font-mono">±{report?.accuracy_meters}m radius</span>
-                  </div>
-                  <div className="flex justify-between text-[#929A95]">
-                    <span>Photo Quality:</span>
-                    <span className="text-[#A8C83A] font-mono">NORMAL · METADATA VERIFIED</span>
-                  </div>
-                </div>
+            FIELD LEVEL: "What happened with my report?"
+            Calm, citizen-readable narrative without raw ML jargon.
+            ══════════════════════════════════════════════════════════ */}
+        {isField && (
+          <div className="space-y-8 animate-in fade-in duration-200">
+            {/* Field Header */}
+            <div className="space-y-2 border-b border-[#DAD8CC] pb-6">
+              <div className="flex items-center gap-2">
+                <StateMark state="corroborated" label="Corroborated by available telemetry" />
+                <span className="text-[#7B837C] text-xs font-mono">· {displayTimestamp}</span>
               </div>
-
-              {/* Citizen Thread: "What did ONER check?" */}
-              <div className="lg:col-span-7 p-5 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#F1F3EE]">
-                    What ONER Checked
-                  </span>
-                  <span className="text-xs font-mono text-[#A8C83A] font-bold">
-                    89.4% Corroborated
-                  </span>
-                </div>
-
-                <p className="text-xs text-[#929A95] leading-relaxed">
-                  Your report was fused with 5 independent environmental data streams. The signal
-                  was immediately cross-referenced against Orion Refining Complex&apos;s active CEMS
-                  telemetry, weather vectors, and ambient boundary sensors.
-                </p>
-
-                <div className="space-y-2">
-                  {report?.evidence_sources.map((src, i) => (
-                    <div
-                      key={i}
-                      className="p-2.5 rounded bg-[#080A09] border border-[#242A27] flex items-center justify-between text-xs"
-                    >
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 size={14} className="text-[#A8C83A] shrink-0" />
-                        <span className="text-[#F1F3EE]">{src}</span>
-                      </div>
-                      <span className="text-[10px] font-mono text-[#A8C83A]">AGREEMENT ✓</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Citizen Points & Accountability Return */}
-                <div className="p-4 rounded bg-[#141817] border border-[#242A27] flex items-center justify-between flex-wrap gap-3">
-                  <div>
-                    <div className="text-[10px] font-mono uppercase text-[#A8C83A] font-bold">
-                      CITIZEN ACCOUNTABILITY RETURN
-                    </div>
-                    <div className="text-xs text-[#F1F3EE] mt-0.5">
-                      Reporter: {report?.reporter.name} ({report?.reporter.badge})
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xl font-bold text-[#C4DF61]">
-                      +{report?.reporter.points_awarded || 50} pts
-                    </span>
-                    <Link
-                      href={`/case/${caseId}?level=impact`}
-                      className="px-3 py-1.5 rounded bg-[#080A09] hover:bg-[#1D2320] border border-[#242A27] text-xs font-semibold text-[#F1F3EE] transition-colors"
-                    >
-                      View Impact Statement →
-                    </Link>
-                  </div>
-                </div>
-              </div>
+              <h1 className="font-serif text-3xl sm:text-4xl text-[#1B211C] tracking-tight">
+                {displayTitle}
+              </h1>
+              <p className="text-sm text-[#4F5851] max-w-2xl leading-relaxed">
+                Reported by a resident at {displayLocation.split(',')[0]}. ONER evaluated multiple independent sensor feeds and identified a thermal combustion imbalance at {displayEquipment}.
+              </p>
             </div>
 
-            {/* Evidence Trust Layer Audit */}
-            <EvidenceTrustLayer
-              reportId={caseId}
-              hasPhoto={true}
-              photoQuality="HIGH"
-              photoProvenance="UNKNOWN"
-              hasGps={true}
-              gpsAccuracyMeters={report?.accuracy_meters || 4.2}
-              hasTimestamp={true}
-              facilityProximity="0.42 km from North Train"
-              telemetryAnomalyDetected={true}
-              historicalDeviationDetected={true}
-              overallQuality="HIGH"
-            />
-          </div>
-        )}
-
-        {/* ══════════════════════════════════════════════════════════
-            LEVEL 2: CONTROL — "What does the system know and what do we do?"
-           ══════════════════════════════════════════════════════════ */}
-        {currentLevel === 'control' && (
-          <div className="space-y-6">
-            {/* The Full Convergence Chain */}
-            <ConvergenceChain
-              caseId={caseId}
-              corroborationScore={report?.corroboration_score || 89.4}
-              anomalyScore={0.884}
-              rootCauseConfidence={99.4}
-            />
-
-            {/* Operational Action Rail & Setpoint Control */}
-            <div className="p-5 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#242A27]">
-                <div>
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-[#A8C83A]">
-                    Engineering Response Rail
+            {/* Field Two-Column Layout: Evidence Viewfinder & Chronological Thread */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              {/* Left 5 Cols: Submitted Evidence Plate */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="border border-[#DAD8CC] rounded-[2px] bg-[#FFFFFF] p-3 space-y-3 shadow-sm">
+                  {/* Photo container with viewfinder framing */}
+                  <div className="relative h-60 rounded-[1px] bg-[#161C18] flex items-center justify-center overflow-hidden">
+                    <img
+                      src={displayPhotoUrl}
+                      alt="Submitted evidence"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2 text-[9px] font-mono bg-[#000000]/70 text-[#FFFFFF] px-2 py-0.5 rounded-[1px]">
+                      OPTICAL OBSERVATION · 09:42 IST
+                    </div>
                   </div>
-                  <h3 className="text-sm font-bold text-[#F1F3EE]">
-                    Closed-Loop Corrective Intervention Sequence
-                  </h3>
+
+                  {/* Metadata */}
+                  <div className="text-xs font-mono text-[#4F5851] space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#7B837C]">Location</span>
+                      <span>{displayLocation}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#7B837C]">Coordinates</span>
+                      <span>17.4399° N, 78.3845° E (±12m)</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#7B837C]">Nearby equipment</span>
+                      <span className="font-semibold text-[#1B211C]">{displayEquipment}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono text-[#929A95]">
-                    Target Source: Furnace F-101 Burner Assembly
-                  </span>
+
+                {/* What ONER Checked: Simple Evidence Summary */}
+                <div className="p-4 rounded-[2px] border border-[#DAD8CC] bg-[#FFFFFF] space-y-3">
+                  <div className="text-xs font-mono uppercase tracking-wider text-[#7B837C]">
+                    What ONER Checked (6 Sources)
+                  </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between py-1 border-b border-[#E6E4D9]">
+                      <span>1. Resident photograph</span>
+                      <span className="font-mono text-[#4F6A0E]">Attached</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1 border-b border-[#E6E4D9]">
+                      <span>2. Facility proximity model</span>
+                      <span className="font-mono text-[#4F6A0E]">F-101 nearby</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1 border-b border-[#E6E4D9]">
+                      <span>3. Time alignment</span>
+                      <span className="font-mono text-[#4F6A0E]">Within ±45s</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1 border-b border-[#E6E4D9]">
+                      <span>4. Plant stack telemetry</span>
+                      <span className="font-mono text-[#4F6A0E]">Elevated NOx (+31.4%)</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1 border-b border-[#E6E4D9]">
+                      <span>5. Regional ambient monitor AQ-04</span>
+                      <span className="font-mono text-[#4F6A0E]">PM2.5 spike</span>
+                    </div>
+                    <div className="flex items-center justify-between py-1">
+                      <span>6. 90-day historical baseline</span>
+                      <span className="font-mono text-[#4F6A0E]">Outside normal</span>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-[#7B837C] font-mono pt-1">
+                    ONER detected an unusual environmental pattern using multiple sensor channels.
+                  </p>
                 </div>
               </div>
 
-              {/* Action Progression Rail */}
-              <Rail steps={actionRailSteps} currentStepId={actionApplied ? 'ver' : 'act'} />
+              {/* Right 7 Cols: Citizen Vertical Chronological Thread */}
+              <div className="lg:col-span-7 space-y-4">
+                <div className="border border-[#DAD8CC] rounded-[2px] bg-[#FFFFFF] p-6 space-y-6 shadow-sm">
+                  <div className="text-xs font-mono uppercase tracking-wider text-[#7B837C] border-b border-[#E6E4D9] pb-2">
+                    Case Lifecycle Chronology
+                  </div>
 
-              {/* Setpoint Recommendation Desk */}
-              <div className="p-4 rounded bg-[#080A09] border border-[#242A27] flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="text-[10px] font-mono text-[#626A65] uppercase">
-                    Recommended Corrective Setpoint
+                  {/* Vertical Simple Thread */}
+                  <div className="space-y-6 relative before:absolute before:left-3.5 before:top-2 before:bottom-2 before:w-[1px] before:bg-[#DAD8CC]">
+                    {/* Beat 1: You Reported */}
+                    <div className="relative pl-8">
+                      <div className="absolute left-2 top-0.5 w-3.5 h-3.5 rounded-full bg-[#4F6A0E] border-2 border-[#FFFFFF]" />
+                      <div className="text-xs font-mono text-[#7B837C]">03 Oct 2026, 09:42 IST</div>
+                      <div className="text-sm font-semibold text-[#1B211C] mt-0.5">You Reported</div>
+                      <p className="text-xs text-[#4F5851] mt-0.5 leading-relaxed">
+                        Resident observation filed with optical photo plate and consensual GPS coordinates near Sector 4 perimeter.
+                      </p>
+                    </div>
+
+                    {/* Beat 2: ONER Checked */}
+                    <div className="relative pl-8">
+                      <div className="absolute left-2 top-0.5 w-3.5 h-3.5 rounded-full bg-[#4F6A0E] border-2 border-[#FFFFFF]" />
+                      <div className="text-xs font-mono text-[#7B837C]">09:42:48 IST</div>
+                      <div className="text-sm font-semibold text-[#1B211C] mt-0.5">ONER Checked Evidence</div>
+                      <p className="text-xs text-[#4F5851] mt-0.5 leading-relaxed">
+                        Six physical telemetry signals evaluated. Continuous CEMS stack probe confirmed combustion drift matching your photograph.
+                      </p>
+                    </div>
+
+                    {/* Beat 3: Facility Responded */}
+                    <div className="relative pl-8">
+                      <div className="absolute left-2 top-0.5 w-3.5 h-3.5 rounded-full bg-[#4F6A0E] border-2 border-[#FFFFFF]" />
+                      <div className="text-xs font-mono text-[#7B837C]">09:51:30 IST</div>
+                      <div className="text-sm font-semibold text-[#1B211C] mt-0.5">Facility Responded</div>
+                      <p className="text-xs text-[#4F5851] mt-0.5 leading-relaxed">
+                        Orion Refining Complex engineering acknowledged incident. Corrective damper trim setpoint 1.042 applied to Furnace F-101.
+                      </p>
+                    </div>
+
+                    {/* Beat 4: Result Measured */}
+                    <div className="relative pl-8">
+                      <div className="absolute left-2 top-0.5 w-3.5 h-3.5 rounded-full bg-[#4F6A0E] border-2 border-[#FFFFFF]" />
+                      <div className="text-xs font-mono text-[#7B837C]">10:30:00 IST</div>
+                      <div className="text-sm font-semibold text-[#1B211C] mt-0.5">Result Measured</div>
+                      <p className="text-xs text-[#4F5851] mt-0.5 leading-relaxed">
+                        CEMS optical density normalized. Stack sensors measured 14.2 tCO₂e/day emissions reduction and 28.6 kg/day NOx drop.
+                      </p>
+                    </div>
+
+                    {/* Beat 5: You Were Informed */}
+                    <div className="relative pl-8">
+                      <div className="absolute left-2 top-0.5 w-3.5 h-3.5 rounded-full bg-[#4F6A0E] border-2 border-[#FFFFFF]" />
+                      <div className="text-xs font-mono text-[#7B837C]">11:00:00 IST</div>
+                      <div className="text-sm font-semibold text-[#1B211C] mt-0.5">You Were Informed & Credited</div>
+                      <p className="text-xs text-[#4F5851] mt-0.5 leading-relaxed">
+                        Verified outcome returned to resident account. +50 Community Impact Points credited for actionable observation.
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-base font-bold font-mono text-[#F1F3EE]">
-                    Damper Trim: <strong className="text-[#A8C83A]">1.042</strong>
-                  </div>
-                  <p className="text-xs text-[#929A95]">
-                    Trims excess combustion air by 4.2% to re-establish stoichiometric balance and
-                    halt refractory overheating.
-                  </p>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <Link
-                    href="/simulator"
-                    className="px-3 py-2 rounded bg-[#141817] hover:bg-[#1F2622] border border-[#242A27] text-xs font-semibold text-[#F1F3EE] transition-colors"
-                  >
-                    Simulate Counterfactual
-                  </Link>
-
+                {/* Switch to Operator Control Level prompt */}
+                <div className="p-4 rounded-[2px] bg-[#FBFAF5] border border-[#DAD8CC] flex items-center justify-between text-xs">
+                  <div>
+                    <span className="font-semibold text-[#1B211C] block">Are you a facility operator or regulator?</span>
+                    <span className="text-[#7B837C] text-[11px]">Inspect the technical evidence ledger and physical root-cause graph.</span>
+                  </div>
                   <button
                     type="button"
-                    onClick={handleApplyIntervention}
-                    disabled={actionApplied}
-                    className={`px-4 py-2 rounded text-xs font-mono font-bold transition-all cursor-pointer ${
-                      actionApplied
-                        ? 'bg-[#141817] text-[#A8C83A] border border-[#A8C83A]/40'
-                        : 'bg-[#A8C83A] text-[#080A09] hover:bg-[#C4DF61]'
-                    }`}
+                    onClick={() => handleLevelChange('control')}
+                    className="px-3.5 py-1.5 rounded-[2px] bg-[#FFFFFF] border border-[#DAD8CC] hover:border-[#4F6A0E] text-[#1B211C] font-mono text-xs transition-colors cursor-pointer"
                   >
-                    {actionApplied ? '✓ SETPOINT APPLIED TO DCS' : 'APPLY SETPOINT (1.042)'}
+                    Open Control Level →
                   </button>
                 </div>
               </div>
             </div>
+          </div>
+        )}
 
-            {/* Telemetry Deviations & Physical Signals */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              <Signal
-                label="NOx Flue Concentration"
-                unit="mg/Nm³"
-                currentValue={131.4}
-                baselineValue={100.0}
-                threshold={100.0}
-                anomalyDelta="+31.4% excess"
-                status="ANOMALY"
+        {/* ══════════════════════════════════════════════════════════
+            CONTROL LEVEL: "What does ONER know and what do we do?"
+            Operator decision instrument & Convergence Chain.
+            ══════════════════════════════════════════════════════════ */}
+        {isControl && (
+          <div className="space-y-8 animate-in fade-in duration-200">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-3 border-b border-[#242A27] pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <StateMark state="corroborated" label="Corroboration Score: 89.4 / 100" />
+                  <span className="text-[#626A65] text-xs font-mono">· {displayEquipment}</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-medium text-[#F1F3EE] mt-1 tracking-tight">
+                  {displayTitle}
+                </h1>
+                <p className="text-xs text-[#929A95] mt-0.5 font-mono">
+                  Anomaly Score: 0.884 · Root Cause Support: 99.4/100 · Actuator: Damper Trim 1.042
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/simulator?case=${caseId}`}
+                  className="px-3 py-1.5 rounded-[2px] bg-[#141817] hover:bg-[#1A201E] border border-[#242A27] text-xs font-mono text-[#F1F3EE] transition-colors inline-flex items-center gap-1.5"
+                >
+                  <SlidersHorizontal size={13} className="text-[#A8C83A]" />
+                  <span>Open Simulator</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Flagship Convergence Chain Centerpiece */}
+            <div className="bg-[#0E1110] border border-[#242A27] rounded-[2px] p-4 sm:p-6 shadow-xl">
+              <ConvergenceChain
+                coreScore={displayCorroboration}
+                likelyCause="Likely cause"
+                causeDetail="Burner fouling · F-101"
+                actionName="Action"
+                actionDetail="Damper trim 1.042"
+                verifiedNotice="Verification"
+                verifiedDetail="MRV evidence assembled"
+                measuredOutcome="14.2"
+                measuredUnit="tCO₂e per day"
+                showReturnLine={true}
               />
-              <Signal
-                label="Flue Gas Temperature"
-                unit="°C"
-                currentValue={348.4}
-                baselineValue={330.0}
-                threshold={330.0}
-                anomalyDelta="+18.4°C"
-                status="ANOMALY"
-              />
-              <Signal
-                label="Ambient Downwind PM2.5"
-                unit="µg/m³"
-                currentValue={94.2}
-                baselineValue={45.0}
-                threshold={60.0}
-                anomalyDelta="+117%"
-                status="ANOMALY"
-              />
-              <Signal
-                label="Post-Action Restored NOx"
-                unit="mg/Nm³"
-                currentValue={88.5}
-                baselineValue={100.0}
-                threshold={100.0}
-                anomalyDelta="-28.6 kg/d"
-                status="OPTIMAL"
-              />
+            </div>
+
+            {/* 5 Precision Control Sections with Hairlines */}
+            <div className="space-y-6">
+              {/* 1. EVIDENCE */}
+              <section className="p-5 rounded-[2px] bg-[#0E1110] border border-[#242A27] space-y-4">
+                <div className="text-xs font-mono uppercase tracking-wider text-[#A8C83A] flex items-center justify-between border-b border-[#181E1C] pb-2">
+                  <span>01 · Multi-Source Evidence Ledger</span>
+                  <span className="text-[#626A65]">6 of 6 Channels Active</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                  {CANONICAL_CASE.signals.map((sig) => (
+                    <div key={sig.id} className="p-3 rounded-[2px] bg-[#141817] border border-[#242A27] space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-[#F1F3EE]">{sig.name}</span>
+                        <span className="font-mono text-[#A8C83A]">+{sig.earned}/{sig.possible}</span>
+                      </div>
+                      <div className="text-[11px] text-[#929A95]">{sig.description}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Telemetry Deviations */}
+                <div className="p-3 rounded-[2px] bg-[#080A09] border border-[#181E1C] font-mono text-xs flex flex-wrap gap-6 text-[#929A95]">
+                  <span>NOx Stack: <strong className="text-amber-400">+31.4% (131.4 mg/Nm³)</strong></span>
+                  <span>Stack Temp: <strong className="text-amber-400">+18.4°C</strong></span>
+                  <span>PM2.5 Ambient: <strong className="text-amber-400">+22.7%</strong></span>
+                  <span>Stoichiometric Trim: <strong className="text-amber-400">0.94 (Sub-stoichiometric)</strong></span>
+                </div>
+              </section>
+
+              {/* 2. CAUSE */}
+              <section className="p-5 rounded-[2px] bg-[#0E1110] border border-[#242A27] space-y-3">
+                <div className="text-xs font-mono uppercase tracking-wider text-[#A8C83A] border-b border-[#181E1C] pb-2 flex items-center justify-between">
+                  <span>02 · Root Cause Explanation</span>
+                  <span className="text-[#929A95] font-mono">Support: 99.4 / 100</span>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="text-base font-medium text-[#F1F3EE]">
+                    Burner refractory fouling + natural gas stoichiometric imbalance
+                  </div>
+                  <p className="text-xs text-[#929A95] leading-relaxed">
+                    Combustion air damper calibration drift caused fuel-rich operating state on Furnace F-101, generating incomplete combustion, unburnt hydrocarbons, and elevated NOx plume visible from boundary fence.
+                  </p>
+                </div>
+              </section>
+
+              {/* 3. OPTIONS */}
+              <section className="p-5 rounded-[2px] bg-[#0E1110] border border-[#242A27] space-y-3">
+                <div className="text-xs font-mono uppercase tracking-wider text-[#A8C83A] border-b border-[#181E1C] pb-2">
+                  <span>03 · Intervention Decision Matrix</span>
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  {/* Option A: Do Nothing */}
+                  <div className="p-3 rounded-[2px] bg-[#141817] border border-[#242A27] flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-[#F1F3EE]">Do Nothing (Maintain Status Quo)</div>
+                      <div className="text-[11px] text-[#929A95]">NOx remains +31.4% above regulatory pact limit · Risk of Level 1 notice</div>
+                    </div>
+                    <span className="font-mono text-amber-400 text-xs">Pact Conflict</span>
+                  </div>
+
+                  {/* Option B: Damper Trim (Recommended) */}
+                  <div className="p-3 rounded-[2px] bg-[#141817] border border-[#A8C83A]/60 flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-[#A8C83A] flex items-center gap-2">
+                        <span>Damper Trim 1.042 Compensation</span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#A8C83A]/20 text-[#A8C83A]">RECOMMENDED</span>
+                      </div>
+                      <div className="text-[11px] text-[#929A95]">Reset stoichiometric loop · NOx −28.6 kg/day · CO₂e −14.2 t/day drop</div>
+                    </div>
+                    <span className="font-mono text-[#A8C83A] text-xs font-semibold">14.2 t/day Cut</span>
+                  </div>
+
+                  {/* Option C: Overhaul */}
+                  <div className="p-3 rounded-[2px] bg-[#141817] border border-[#242A27] flex items-center justify-between">
+                    <div>
+                      <div className="font-semibold text-[#F1F3EE]">Complete Burner Refractory Overhaul</div>
+                      <div className="text-[11px] text-[#929A95]">Requires 48-hour scheduled plant shutdown · Est. cost $85,000</div>
+                    </div>
+                    <span className="font-mono text-[#929A95] text-xs">Scheduled Window</span>
+                  </div>
+                </div>
+              </section>
+
+              {/* 4. ACTION */}
+              <section className="p-5 rounded-[2px] bg-[#0E1110] border border-[#242A27] space-y-4">
+                <div className="text-xs font-mono uppercase tracking-wider text-[#A8C83A] border-b border-[#181E1C] pb-2 flex items-center justify-between">
+                  <span>04 · Operational Actuator Lifecycle</span>
+                  <span className="text-[#626A65]">Work Order #WO-8821</span>
+                </div>
+
+                {/* Lifecycle Step Rail */}
+                <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 text-xs font-mono">
+                  <div className="p-2 rounded-[2px] bg-[#141817] border border-[#A8C83A] text-[#A8C83A]">
+                    ✓ Acknowledge
+                  </div>
+                  <div className="p-2 rounded-[2px] bg-[#141817] border border-[#A8C83A] text-[#A8C83A]">
+                    ✓ Investigate
+                  </div>
+                  <div className="p-2 rounded-[2px] bg-[#141817] border border-[#A8C83A] text-[#A8C83A]">
+                    ✓ Simulate
+                  </div>
+                  <div className={`p-2 rounded-[2px] border ${actionApplied ? 'bg-[#141817] border-[#A8C83A] text-[#A8C83A]' : 'bg-[#141817] border-amber-400 text-amber-400'}`}>
+                    {actionApplied ? '✓ Applied' : '● In Progress'}
+                  </div>
+                  <div className="p-2 rounded-[2px] bg-[#080A09] border border-[#242A27] text-[#626A65]">
+                    Verify
+                  </div>
+                  <div className="p-2 rounded-[2px] bg-[#080A09] border border-[#242A27] text-[#626A65]">
+                    Resolve
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-2">
+                  <div className="text-xs font-mono text-[#929A95]">
+                    Lead Engineer: <strong>M. Rao (Chief Combustion Engineer)</strong> · Target: 11:30 IST
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setActionApplied(true)}
+                    className="px-4 py-2 rounded-[2px] bg-[#A8C83A] hover:bg-[#99B732] text-[#121A0A] font-medium text-xs font-mono transition-colors cursor-pointer"
+                  >
+                    {actionApplied ? 'Damper Trim Applied ✓' : 'Execute Damper Trim 1.042'}
+                  </button>
+                </div>
+              </section>
+
+              {/* 5. VERIFY */}
+              <section className="p-5 rounded-[2px] bg-[#0E1110] border border-[#242A27] space-y-3">
+                <div className="text-xs font-mono uppercase tracking-wider text-[#A8C83A] border-b border-[#181E1C] pb-2 flex items-center justify-between">
+                  <span>05 · Verification & MRV Assembly</span>
+                  <span className="text-[#A8C83A] font-mono">MRV READY</span>
+                </div>
+
+                <p className="text-xs text-[#929A95] leading-relaxed">
+                  CEMS stack optical density and O2 trim logging continuous verification stream at 1.0 Hz. ISO 14064-2 digital abatement pack assembled. Third-party carbon registry verification pending.
+                </p>
+              </section>
             </div>
           </div>
         )}
 
         {/* ══════════════════════════════════════════════════════════
-            LEVEL 3: IMPACT — "Can we prove the environmental improvement?"
-           ══════════════════════════════════════════════════════════ */}
-        {currentLevel === 'impact' && (
-          <div className="space-y-6">
-            {/* The Hero Reduction Wedge */}
-            <ReductionWedge
-              dailyReductionTons={14.2}
-              annualizedReductionTons={5183}
-              noxDailyReductionKg={28.6}
-              facilityName={report?.correlated_facility || 'Orion Refining Complex'}
-              sourceName={report?.likely_source || 'Furnace F-101'}
-              interventionName="Damper Trim 1.042 (Air-Fuel Stoichiometric Reset)"
-              isVerified={true}
-            />
+            IMPACT LEVEL: "What changed?"
+            Hero Reduction Wedge & Citizen Return Loop.
+            ══════════════════════════════════════════════════════════ */}
+        {isImpact && (
+          <div className="space-y-8 animate-in fade-in duration-200">
+            {/* Header */}
+            <div className="border-b border-[#242A27] pb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono px-2 py-0.5 rounded-[1px] bg-[#A8C83A]/20 text-[#A8C83A] border border-[#A8C83A]/40 font-semibold">
+                  MRV READY
+                </span>
+                <span className="text-[#929A95] text-xs font-mono">· Measured Reduction Outcome</span>
+              </div>
+              <h1 className="text-2xl sm:text-4xl font-light text-[#F1F3EE] mt-2 font-mono">
+                -14.2 tCO₂e / day
+              </h1>
+              <p className="text-xs text-[#929A95] mt-1 font-mono">
+                Annualized Potential: 5,183 tCO₂e/year · NOx drop: 28.6 kg/day · Furnace F-101
+              </p>
+            </div>
 
-            {/* Environmental Impact Audit Trail */}
-            <div className="p-5 rounded-lg bg-[#0E1110] border border-[#242A27] space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-[#242A27]">
-                <div className="flex items-center gap-2">
-                  <FileText size={15} className="text-[#A8C83A]" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#F1F3EE]">
-                    Accountability & Regulatory Audit Trail
-                  </span>
-                </div>
-                <span className="text-[10px] font-mono text-[#626A65]">ISO 14064-2 COMPLIANT</span>
+            {/* Hero Reduction Wedge Visualization */}
+            <div className="p-6 rounded-[2px] bg-[#0E1110] border border-[#242A27] space-y-6">
+              <div className="text-xs font-mono uppercase tracking-wider text-[#A8C83A] border-b border-[#181E1C] pb-2 flex items-center justify-between">
+                <span>The Reduction Wedge</span>
+                <span className="text-[#626A65]">Baseline vs Post-Intervention CEMS Mean</span>
               </div>
 
-              <div className="divide-y divide-[#242A27]">
-                {report?.audit_trail.map((item, idx) => (
-                  <div key={idx} className="py-2.5 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <span className="font-mono text-[10px] text-[#626A65]">{item.time}</span>
-                      <span className="font-semibold text-[#F1F3EE]">{item.actor}</span>
-                      <span className="text-[#929A95]">{item.event}</span>
-                    </div>
-                    <span className="font-mono text-[10px] text-[#A8C83A]">LOGGED</span>
-                  </div>
-                ))}
+              {/* Wedge SVG Chart */}
+              <div className="w-full overflow-x-auto">
+                <svg viewBox="0 0 760 300" className="w-full min-w-[650px] h-auto font-sans" role="img" aria-label="Reduction wedge diagram">
+                  <defs>
+                    <linearGradient id="wedgeFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#A8C83A" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#A8C83A" stopOpacity="0.05" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Wedge polygon: between baseline mean (y=50) and post-action level (y=210) */}
+                  <polygon points="380,50 740,50 740,210 380,210" fill="url(#wedgeFill)" stroke="#A8C83A" strokeWidth="1" />
+
+                  {/* Baseline Pre-intervention polyline */}
+                  <polyline fill="none" stroke="#929A95" strokeWidth="1.5" points="20,52 60,44 100,58 140,46 180,54 220,42 260,56 300,48 340,52 380,50" />
+
+                  {/* Post-action Measured polyline */}
+                  <polyline fill="none" stroke="#A8C83A" strokeWidth="2.5" points="380,50 410,150 450,214 490,206 530,216 570,208 610,214 650,206 690,214 740,210" />
+
+                  {/* Horizontal baseline dashed line */}
+                  <line x1="20" y1="50" x2="740" y2="50" stroke="#626A65" strokeDasharray="4 4" />
+
+                  {/* Vertical intervention line */}
+                  <line x1="380" y1="20" x2="380" y2="270" stroke="#F1F3EE" strokeWidth="1.5" />
+
+                  {/* Measurement inside wedge */}
+                  <text x="410" y="145" fill="#F1F3EE" fontSize="96" fontWeight="300" fontFamily="Geist Mono">14.2</text>
+                  <text x="414" y="175" fill="#C9CFC9" fontSize="15">tCO₂e per day, measured</text>
+
+                  {/* Phase Labels along bottom */}
+                  <g fill="#929A95" fontSize="12" fontFamily="Geist Mono">
+                    <text x="20" y="288">Before: 104.2 tCO₂e/day baseline</text>
+                    <text x="392" y="288">Damper trim 1.042 applied</text>
+                    <text x="560" y="288">After: 90.0 tCO₂e/day (measured)</text>
+                  </g>
+                </svg>
+              </div>
+
+              {/* Annualized Metric & Disclosure */}
+              <div className="pt-4 border-t border-[#181E1C] flex flex-col sm:flex-row sm:items-baseline justify-between gap-3 text-xs">
+                <div>
+                  <div className="font-mono text-3xl font-light text-[#F1F3EE]">5,183</div>
+                  <div className="text-[11px] font-mono text-[#929A95]">tCO₂e per year, annualized (14.2 × 365)</div>
+                  <div className="text-[11px] font-mono text-[#A8C83A] mt-1">Potential creditable reduction</div>
+                </div>
+
+                <div className="max-w-md text-right font-mono text-[11px] text-[#626A65] leading-relaxed">
+                  Notice: Potential creditable reduction is an analytical estimate based on sustained post-action CEMS levels, not an issued carbon credit. Third-party registry audit pending.
+                </div>
               </div>
             </div>
 
-            {/* Return Navigation to Community and Industry */}
-            <div className="flex items-center justify-between p-4 rounded bg-[#080A09] border border-[#242A27] text-xs">
-              <span className="text-[#929A95]">
-                Environmental case resolved and communicated to citizen reporter.
-              </span>
-              <div className="flex items-center gap-2">
-                <Link
-                  href="/community"
-                  className="px-3 py-1.5 rounded bg-[#141817] hover:bg-[#1D2320] border border-[#242A27] text-[#F1F3EE] transition-colors"
-                >
-                  View Community Ledger
-                </Link>
-                <Link
-                  href="/carbon"
-                  className="px-3 py-1.5 rounded bg-[#141817] hover:bg-[#1D2320] border border-[#A8C83A]/40 text-[#A8C83A] transition-colors"
-                >
-                  View Institutional Carbon & MRV →
-                </Link>
+            {/* ── Citizen Return Loop (Visual loop closure) ────────── */}
+            <div className="p-6 rounded-[2px] bg-[#0E1110] border border-[#A8C83A]/50 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl">
+              <div className="flex items-center gap-4">
+                <div className="w-16 h-16 rounded-[1px] bg-[#161C18] border border-[#242A27] overflow-hidden shrink-0">
+                  <img src={displayPhotoUrl} alt="Citizen evidence" className="w-full h-full object-cover" />
+                </div>
+                <div className="space-y-1">
+                  <div className="text-xs font-mono text-[#A8C83A] font-semibold flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#A8C83A] animate-pulse" />
+                    <span>RETURN LOOP COMPLETED</span>
+                  </div>
+                  <div className="text-sm font-medium text-[#F1F3EE]">
+                    Reported by resident at 09:42 IST · Measured result: 14.2 tCO₂e less per day.
+                  </div>
+                  <div className="text-xs font-mono text-[#929A95]">
+                    Reporter notified in app · +50 Community Impact Points credited.
+                  </div>
+                </div>
               </div>
+
+              <Link
+                href="/community"
+                className="px-5 py-2.5 rounded-[2px] bg-[#141817] hover:bg-[#1A201E] border border-[#A8C83A]/40 text-xs font-mono text-[#A8C83A] hover:text-[#F1F3EE] transition-colors shrink-0 cursor-pointer"
+              >
+                View Community Journal →
+              </Link>
             </div>
           </div>
         )}
-      </div>
-    </AppLayout>
+
+        {/* Global Prototype Disclosure Footer */}
+        <div className="pt-6 border-t border-[var(--line-subtle)] text-[11px] font-mono text-[var(--ink-3)] flex flex-wrap justify-between gap-2 select-none">
+          <DemoTag label="Case COMM-2026-00421 · Prototype workflow · Simulated telemetry" variant="subtle" />
+          <span>Potential creditable reduction is an estimate, not an issued carbon credit.</span>
+        </div>
+      </main>
+    </div>
   );
 }
